@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Daily Production Checksheet | UBnetwork Lite</title>
+  <link rel="stylesheet" href="assets/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <a href="productivity.html" class="btn">← Productivity Hub</a>
+        <div>
+          <div class="brand-title">Daily Production Checksheet</div>
+          <div id="subInfo" class="brand-sub">Penyimpanan Lokal IndexedDB · 0 Request Jaringan Selama Shift</div>
+        </div>
+      </div>
+      <div class="nav-right">
+        <span id="syncStatusPill" class="pill pill-amber">● Draft Lokal</span>
+        <button id="btnSaveLocal" class="btn" type="button">💾 Simpan Lokal</button>
+        <button id="btnSyncServer" class="btn btn-emerald" type="button">☁ Kirim ke Server (1x Sync)</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="display:grid;gap:14px">
+    <!-- Filter Bar -->
+    <section class="glass" style="padding:14px">
+      <div class="grid-4">
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">TANGGAL</label>
+          <input id="inpDate" class="input mono" type="date" />
+        </div>
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">SHIFT</label>
+          <select id="inpShift" class="select">
+            <option value="RED">🔴 RED</option>
+            <option value="WHITE">⚪ WHITE</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">SESI</label>
+          <select id="inpSession" class="select">
+            <option value="day">Siang (07:30 - 16:30+)</option>
+            <option value="night">Malam (20:30 - 05:30+)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">TARGET CCR (UNIT)</label>
+          <input id="inpCcr" class="input mono" type="number" min="0" />
+        </div>
+      </div>
+      <div class="grid-4" style="margin-top:10px">
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">PIC (GL)</label>
+          <input id="inpPic" class="input" placeholder="Nama GL" />
+        </div>
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">SPV (TL)</label>
+          <input id="inpSpv" class="input" placeholder="Nama TL" />
+        </div>
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">OVERTIME AKTUAL (JAM)</label>
+          <input id="inpOtHours" class="input mono" type="number" step="0.5" min="0" value="0" />
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <button id="btnOpenNoBody" class="btn btn-purple" style="width:100%;padding:9px 12px" type="button">
+            # Update No Body &amp; Jam Stop
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI Summary Cards -->
+    <section class="grid-4">
+      <div class="glass-soft" style="padding:12px 14px">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Total Plan / Actual</div>
+        <div id="kpiOutput" class="mono" style="font-size:20px;font-weight:900;margin-top:2px">0 / 0</div>
+        <div id="kpiDiff" class="mono" style="font-size:11px;color:var(--muted)">Diff: 0 · Eff: 0%</div>
+      </div>
+      <div class="glass-soft" style="padding:12px 14px">
+        <div style="font-size:10px;color:#d8b4fe;font-weight:700;text-transform:uppercase">No Body (Start → Finish)</div>
+        <div id="kpiBody" class="mono" style="font-size:18px;font-weight:900;color:#e9d5ff;margin-top:2px">- → -</div>
+        <div id="kpiBodyRun" class="mono" style="font-size:11px;color:var(--muted)">Total Body Run: 0 Unit</div>
+      </div>
+      <div class="glass-soft" style="padding:12px 14px">
+        <div style="font-size:10px;color:#fda4af;font-weight:700;text-transform:uppercase">Jam Stop Manual / Sistem</div>
+        <div id="kpiStop" class="mono" style="font-size:18px;font-weight:900;color:#fda4af;margin-top:2px">- WIB</div>
+        <div id="kpiSysStop" class="mono" style="font-size:11px;color:#67e8f9">Sistem: - WIB</div>
+      </div>
+      <div class="glass-soft" style="padding:12px 14px">
+        <div style="font-size:10px;color:#fcd34d;font-weight:700;text-transform:uppercase">Total Delay (INT / EXT)</div>
+        <div id="kpiDelay" class="mono" style="font-size:20px;font-weight:900;color:#fcd34d;margin-top:2px">0 min</div>
+        <div id="kpiDelaySplit" class="mono" style="font-size:11px;color:var(--muted)">INT: 0m · EXT: 0m</div>
+      </div>
+    </section>
+
+    <!-- Hourly Production Table -->
+    <section class="glass" style="padding:14px;overflow-x:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:800">Pencatatan Output Per Jam (Plan vs Actual &amp; Chokotei)</div>
+        <span id="roleWarn" class="pill pill-purple">Role: ADMIN</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:42px">#</th>
+            <th style="width:125px">Jam</th>
+            <th style="width:80px">Plan</th>
+            <th style="width:85px">Actual</th>
+            <th style="width:65px">Diff</th>
+            <th style="width:85px">Delay (m)</th>
+            <th style="width:85px">Kat</th>
+            <th>Problem / Chokotei</th>
+            <th>Countermeasure</th>
+          </tr>
+        </thead>
+        <tbody id="slotsBody"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- MODAL: UPDATE NO BODY & JAM STOP (Versi Simple Identik dengan UBnetwork terbaru) -->
+  <div id="noBodyModal" class="modal-backdrop">
+    <div class="modal-card" style="display:grid;gap:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:10px">
+        <h3 style="margin:0;font-size:15px;font-weight:800">Update No Body &amp; Jam Stop</h3>
+        <div style="display:flex;gap:6px">
+          <button id="btnModalSaveTop" class="btn btn-purple" type="button">💾 Simpan</button>
+          <button id="btnModalClose" class="btn" type="button" style="padding:6px 10px">✕</button>
+        </div>
+      </div>
+
+      <!-- Seksi 1: No Body Start & Finish -->
+      <div class="glass-soft" style="padding:12px;border-color:rgba(168,85,247,0.35);display:grid;gap:10px">
+        <div style="font-size:12px;font-weight:800;color:#d8b4fe">Nomor Seri Bodi (Start &amp; Finish)</div>
+        <div class="grid-2">
+          <div>
+            <label style="font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">NO BODY START</label>
+            <input id="mBodyStart" class="input mono" style="text-align:right;font-weight:900;font-size:15px" placeholder="39515" />
+          </div>
+          <div>
+            <label style="font-size:10px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">NO BODY END (FINISH)</label>
+            <input id="mBodyFinish" class="input mono" style="text-align:right;font-weight:900;font-size:15px;color:#d8b4fe" placeholder="39734" />
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap">
+          <button id="btnPrevCarry" class="btn" type="button" style="font-size:10.5px;padding:5px 9px;display:none"></button>
+          <button id="btnAutoCcr" class="btn btn-purple" type="button" style="font-size:10.5px;padding:5px 9px">Auto Finish (CCR)</button>
+        </div>
+        <div class="grid-2">
+          <div class="glass-soft" style="padding:8px 10px">
+            <div style="font-size:10px;color:#a5b4fc;font-weight:700">TOTAL BODY RUN</div>
+            <div id="mBodyRun" class="mono" style="font-size:15px;font-weight:900">0 Unit</div>
+          </div>
+          <div class="glass-soft" style="padding:8px 10px">
+            <div style="font-size:10px;color:#d8b4fe;font-weight:700">TOTAL OUTPUT (ACTUAL)</div>
+            <div id="mTotalAct" class="mono" style="font-size:15px;font-weight:900;color:#d8b4fe">0 Unit</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seksi 2: Waktu Sistem + Salin ↓ & Jam Stop Manual Besar -->
+      <div class="glass-soft" style="padding:12px;border-color:rgba(244,63,94,0.35);display:grid;gap:12px">
+        <div style="background:rgba(8,51,68,0.5);border:1px solid rgba(6,182,212,0.45);border-radius:12px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="font-size:12px;font-weight:800;color:#67e8f9">Waktu Sistem</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span id="mSysTime" class="mono" style="font-size:15px;font-weight:900;color:#cffafe;background:rgba(22,78,99,0.85);padding:3px 9px;border-radius:8px">- WIB</span>
+            <button id="btnCopySys" class="btn btn-cyan" type="button" style="padding:5px 10px;font-size:11.5px">Salin ↓</button>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:12px;color:#fda4af;font-weight:800;display:block;margin-bottom:6px">Jam Stop Manual</label>
+          <div style="display:flex;align-items:center;background:#020617;border:2px solid rgba(244,63,94,0.45);border-radius:14px;padding:8px 14px">
+            <input id="mJamStop" class="mono" style="width:100%;background:transparent;border:none;color:#fda4af;font-size:24px;font-weight:900;text-align:center;outline:none;letter-spacing:0.06em" placeholder="18:15" />
+            <span class="mono" style="font-size:13px;font-weight:800;color:var(--muted);margin-left:8px">WIB</span>
+          </div>
+        </div>
+      </div>
+
+      <button id="btnModalSaveBottom" class="btn btn-purple" style="width:100%;padding:11px" type="button">💾 Simpan No Body &amp; Jam Stop</button>
+    </div>
+  </div>
+
+  <script src="assets/db.js"></script>
+  <script>
+    (function () {
+      var cfg = null;
+      var curReport = null;
+      var finishManual = false;
+      var prevCarry = null;
+
+      var qs = new URLSearchParams(location.search);
+      var inpDate = document.getElementById('inpDate');
+      var inpShift = document.getElementById('inpShift');
+      var inpSession = document.getElementById('inpSession');
+      var inpCcr = document.getElementById('inpCcr');
+      var inpPic = document.getElementById('inpPic');
+      var inpSpv = document.getElementById('inpSpv');
+      var inpOtHours = document.getElementById('inpOtHours');
+      var slotsBody = document.getElementById('slotsBody');
+
+      function computeSysFinish(slots, takt) {
+        var active = (slots || []).filter(function (s) { return Number(s.plan || 0) > 0 || (s.act !== '' && s.act !== null && Number(s.act) > 0); });
+        if (!active.length) return '-';
+        var last = active[active.length - 1];
+        var startStr = String(last.timeRange || '').split('-')[0].trim();
+        var m = startStr.match(/^(\d{1,2}):(\d{2})$/);
+        if (!m) return '-';
+        var mins = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+        var units = (last.act !== '' && last.act !== null) ? Number(last.act) : Number(last.plan || 0);
+        var totalMins = (mins + Math.round(units * (takt || 2.4))) % 1440;
+        var hh = String(Math.floor(totalMins / 60)).padStart(2, '0');
+        var mm = String(totalMins % 60).padStart(2, '0');
+        return hh + ':' + mm;
+      }
+
+      function computeStats() {
+        var totalPlan = 0, totalAct = 0, intD = 0, extD = 0;
+        (curReport.slots || []).forEach(function (sl) {
+          totalPlan += Number(sl.plan || 0);
+          if (sl.act !== '' && sl.act !== null && sl.act !== undefined) totalAct += Number(sl.act || 0);
+          var d = Number(sl.delayMin || 0);
+          if (sl.category === 'EXT') extD += d; else intD += d;
+        });
+        var diff = totalAct - totalPlan;
+        var eff = totalPlan > 0 ? ((totalAct / totalPlan) * 100).toFixed(1) : '0.0';
+        var sNum = parseInt(String(curReport.noBodyStart || '').replace(/\D/g, ''), 10);
+        var fNum = parseInt(String(curReport.noBodyFinish || '').replace(/\D/g, ''), 10);
+        var bodyRun = (!isNaN(sNum) && !isNaN(fNum) && fNum >= sNum) ? (fNum - sNum + 1) : 0;
+        var sysFin = computeSysFinish(curReport.slots, curReport.taktTime);
+
+        document.getElementById('kpiOutput').textContent = totalPlan + ' / ' + totalAct;
+        document.getElementById('kpiDiff').textContent = 'Diff: ' + (diff >= 0 ? '+' : '') + diff + ' · Eff: ' + eff + '%';
+        document.getElementById('kpiBody').textContent = (curReport.noBodyStart || '-') + ' → ' + (curReport.noBodyFinish || '-');
+        document.getElementById('kpiBodyRun').textContent = 'Total Body Run: ' + bodyRun + ' Unit';
+        document.getElementById('kpiStop').textContent = (curReport.jamStopProduksi || '-') + ' WIB';
+        document.getElementById('kpiSysStop').textContent = 'Sistem: ' + sysFin + ' WIB';
+        document.getElementById('kpiDelay').textContent = (intD + extD) + ' min';
+        document.getElementById('kpiDelaySplit').textContent = 'INT: ' + intD + 'm · EXT: ' + extD + 'm';
+
+        document.getElementById('mBodyRun').textContent = bodyRun + ' Unit';
+        document.getElementById('mTotalAct').textContent = totalAct + ' Unit';
+        document.getElementById('mSysTime').textContent = sysFin + ' WIB';
+
+        var pill = document.getElementById('syncStatusPill');
+        if (curReport.syncStatus === 'synced') {
+          pill.textContent = '✓ Tersinkron ke Server';
+          pill.className = 'pill pill-emerald';
+        } else if (curReport.syncStatus === 'failed') {
+          pill.textContent = '⚠ Gagal Sync (Tersimpan Lokal)';
+          pill.className = 'pill pill-rose';
+        } else {
+          pill.textContent = '● Draft Lokal (Belum Sync)';
+          pill.className = 'pill pill-amber';
+        }
+      }
+
+      function persistLocal(silent) {
+        if (!curReport) return Promise.resolve();
+        if (!UBL.canEditShift(cfg.role, curReport.shift)) {
+          if (!silent) UBL.toast('Role ' + cfg.role + ' tidak diizinkan mengubah shift ' + curReport.shift);
+          return Promise.resolve();
+        }
+        curReport.ccrPlan = parseInt(inpCcr.value, 10) || 0;
+        curReport.picName = inpPic.value.trim();
+        curReport.spvName = inpSpv.value.trim();
+        curReport.actOtHours = parseFloat(inpOtHours.value) || 0;
+        curReport.actOtUnits = Math.round(curReport.actOtHours * 32);
+        if (curReport.syncStatus === 'synced') curReport.syncStatus = 'draft';
+        return UBL.saveReport(curReport).then(function () {
+          computeStats();
+          if (!silent) UBL.toast('Tersimpan di database lokal (IndexedDB).');
+        });
+      }
+
+      function renderSlots() {
+        var editable = UBL.canEditShift(cfg.role, curReport.shift);
+        var rw = document.getElementById('roleWarn');
+        rw.textContent = editable ? ('Role: ' + cfg.role + ' (Edit Aktif)') : ('Role: ' + cfg.role + ' (Read-Only untuk Shift ' + curReport.shift + ')');
+        rw.className = 'pill ' + (editable ? 'pill-emerald' : 'pill-rose');
+
+        slotsBody.innerHTML = '';
+        (curReport.slots || []).forEach(function (sl, idx) {
+          var tr = document.createElement('tr');
+          var actVal = sl.act === null || sl.act === undefined ? '' : sl.act;
+          var diff = actVal === '' ? '-' : (Number(actVal) - Number(sl.plan || 0));
+          tr.innerHTML =
+            '<td class="mono" style="font-weight:800">' + sl.no + (sl.isOvertime ? ' <span style="color:#fcd34d;font-size:10px">OT</span>' : '') + '</td>' +
+            '<td class="mono" style="font-size:11.5px;color:#cbd5e1">' + sl.timeRange + '</td>' +
+            '<td><input data-f="plan" data-i="' + idx + '" class="input mono" type="number" style="padding:5px 7px" value="' + (sl.plan || 0) + '"' + (editable ? '' : ' disabled') + ' /></td>' +
+            '<td><input data-f="act" data-i="' + idx + '" class="input mono" type="number" style="padding:5px 7px;color:#6ee7b7;font-weight:800" value="' + actVal + '" placeholder="-"' + (editable ? '' : ' disabled') + ' /></td>' +
+            '<td class="mono" style="font-weight:800;color:' + (diff < 0 ? '#fda4af' : '#6ee7b7') + '">' + diff + '</td>' +
+            '<td><input data-f="delayMin" data-i="' + idx + '" class="input mono" type="number" style="padding:5px 7px" value="' + (sl.delayMin || 0) + '"' + (editable ? '' : ' disabled') + ' /></td>' +
+            '<td><select data-f="category" data-i="' + idx + '" class="select" style="padding:5px 6px"' + (editable ? '' : ' disabled') + '><option value="INT"' + (sl.category !== 'EXT' ? ' selected' : '') + '>INT</option><option value="EXT"' + (sl.category === 'EXT' ? ' selected' : '') + '>EXT</option></select></td>' +
+            '<td><input data-f="problem" data-i="' + idx + '" class="input" style="padding:5px 7px" value="' + String(sl.problem || '').replace(/"/g, '&quot;') + '" placeholder="Problem..."' + (editable ? '' : ' disabled') + ' /></td>' +
+            '<td><input data-f="countermeasure" data-i="' + idx + '" class="input" style="padding:5px 7px" value="' + String(sl.countermeasure || '').replace(/"/g, '&quot;') + '" placeholder="Perbaikan..."' + (editable ? '' : ' disabled') + ' /></td>';
+          slotsBody.appendChild(tr);
+        });
+
+        slotsBody.querySelectorAll('input, select').forEach(function (el) {
+          el.addEventListener('change', function () {
+            var i = parseInt(el.getAttribute('data-i'), 10);
+            var f = el.getAttribute('data-f');
+            var val = el.value;
+            if (f === 'plan' || f === 'delayMin') curReport.slots[i][f] = parseInt(val, 10) || 0;
+            else if (f === 'act') curReport.slots[i].act = val === '' ? '' : (parseInt(val, 10) || 0);
+            else curReport.slots[i][f] = val;
+            persistLocal(true).then(renderSlots);
+          });
+        });
+        computeStats();
+      }
+
+      function loadCurrent() {
+        var dt = inpDate.value || UBL.wibToday();
+        var sh = inpShift.value || 'RED';
+        var ses = inpSession.value || 'day';
+        var id = UBL.makeReportId(dt, sh, cfg.lineName);
+
+        Promise.all([UBL.getReport(id), UBL.findLatestPrevFinish(dt, sh, ses === 'night')]).then(function (res) {
+          var existing = res[0];
+          prevCarry = res[1];
+
+          if (existing) {
+            curReport = existing;
+            inpSession.value = curReport.session || 'day';
+            finishManual = Boolean(curReport.noBodyFinish);
+          } else {
+            var defCcr = sh === 'RED' ? cfg.ccrTargetRed : cfg.ccrTargetWhite;
+            var autoStart = prevCarry ? UBL.addNumberPreservePad(prevCarry.finish, 1) : '';
+            var autoFinish = (autoStart && defCcr > 0) ? UBL.addNumberPreservePad(autoStart, defCcr - 1) : '';
+            var baseSlots = (ses === 'night' ? UBL.NIGHT_SLOTS : UBL.DAY_SLOTS).map(function (s) {
+              return { no: s.no, timeRange: s.timeRange, plan: s.plan, act: '', delayMin: 0, category: 'INT', problem: '', countermeasure: '', isOvertime: s.isOvertime };
+            });
+            curReport = {
+              id: id,
+              tanggal: dt,
+              shift: sh,
+              session: ses,
+              lineName: cfg.lineName,
+              taktTime: cfg.taktTime,
+              ccrPlan: defCcr,
+              picName: sh === 'RED' ? cfg.picRed : cfg.picWhite,
+              spvName: sh === 'RED' ? cfg.spvRed : cfg.spvWhite,
+              noBodyStart: autoStart,
+              noBodyFinish: autoFinish,
+              jamStopProduksi: '',
+              actOtHours: 0,
+              actOtUnits: 0,
+              slots: baseSlots,
+              syncStatus: 'draft'
+            };
+            finishManual = false;
+          }
+
+          inpCcr.value = curReport.ccrPlan || 0;
+          inpPic.value = curReport.picName || '';
+          inpSpv.value = curReport.spvName || '';
+          inpOtHours.value = curReport.actOtHours || 0;
+          renderSlots();
+        });
+      }
+
+      // Modal No Body & Jam Stop
+      var nbModal = document.getElementById('noBodyModal');
+      var mBodyStart = document.getElementById('mBodyStart');
+      var mBodyFinish = document.getElementById('mBodyFinish');
+      var mJamStop = document.getElementById('mJamStop');
+      var btnPrevCarry = document.getElementById('btnPrevCarry');
+
+      document.getElementById('btnOpenNoBody').onclick = function () {
+        mBodyStart.value = curReport.noBodyStart || '';
+        mBodyFinish.value = curReport.noBodyFinish || '';
+        mJamStop.value = curReport.jamStopProduksi || '';
+        if (prevCarry) {
+          btnPrevCarry.style.display = 'inline-flex';
+          btnPrevCarry.textContent = 'Shift sblm #' + prevCarry.finish + ' → +1';
+        } else {
+          btnPrevCarry.style.display = 'none';
+        }
+        document.getElementById('btnAutoCcr').textContent = 'Auto Finish (CCR ' + (parseInt(inpCcr.value, 10) || 0) + ')';
+        computeStats();
+        nbModal.classList.add('open');
+      };
+
+      mBodyStart.oninput = function () {
+        curReport.noBodyStart = mBodyStart.value.trim();
+        var ccr = parseInt(inpCcr.value, 10) || 0;
+        if (!finishManual && ccr > 0) {
+          var autoF = UBL.addNumberPreservePad(curReport.noBodyStart, ccr - 1);
+          if (autoF) {
+            curReport.noBodyFinish = autoF;
+            mBodyFinish.value = autoF;
+          }
+        }
+        computeStats();
+      };
+      mBodyFinish.oninput = function () {
+        curReport.noBodyFinish = mBodyFinish.value.trim();
+        finishManual = true;
+        computeStats();
+      };
+      btnPrevCarry.onclick = function () {
+        if (!prevCarry) return;
+        var nextS = UBL.addNumberPreservePad(prevCarry.finish, 1);
+        mBodyStart.value = nextS;
+        curReport.noBodyStart = nextS;
+        var ccr = parseInt(inpCcr.value, 10) || 0;
+        if (ccr > 0) {
+          var nextF = UBL.addNumberPreservePad(nextS, ccr - 1);
+          mBodyFinish.value = nextF;
+          curReport.noBodyFinish = nextF;
+          finishManual = false;
+        }
+        computeStats();
+      };
+      document.getElementById('btnAutoCcr').onclick = function () {
+        var ccr = parseInt(inpCcr.value, 10) || 0;
+        finishManual = false;
+        if (mBodyStart.value.replace(/\D/g, '') && ccr > 0) {
+          var nextF = UBL.addNumberPreservePad(mBodyStart.value, ccr - 1);
+          mBodyFinish.value = nextF;
+          curReport.noBodyFinish = nextF;
+          computeStats();
+        }
+      };
+      document.getElementById('btnCopySys').onclick = function () {
+        var sysFin = computeSysFinish(curReport.slots, curReport.taktTime);
+        if (sysFin !== '-') mJamStop.value = sysFin;
+      };
+
+      function saveModalNoBody() {
+        curReport.noBodyStart = mBodyStart.value.trim();
+        curReport.noBodyFinish = mBodyFinish.value.trim();
+        curReport.jamStopProduksi = mJamStop.value.trim();
+        nbModal.classList.remove('open');
+        persistLocal(false);
+      }
+      document.getElementById('btnModalSaveTop').onclick = saveModalNoBody;
+      document.getElementById('btnModalSaveBottom').onclick = saveModalNoBody;
+      document.getElementById('btnModalClose').onclick = function () { nbModal.classList.remove('open'); };
+
+      document.getElementById('btnSaveLocal').onclick = function () { persistLocal(false); };
+      document.getElementById('btnSyncServer').onclick = function () {
+        if (!UBL.canEditShift(cfg.role, curReport.shift)) {
+          UBL.toast('Role ' + cfg.role + ' tidak diizinkan sync shift ' + curReport.shift);
+          return;
+        }
+        var btn = document.getElementById('btnSyncServer');
+        btn.disabled = true;
+        btn.textContent = '⏳ Mengirim ke Server...';
+        persistLocal(true).then(function () {
+          return UBL.syncOneReportToServer(curReport);
+        }).then(function (out) {
+          computeStats();
+          if (out.ok) {
+            UBL.toast('Berhasil sync ke server! Data siap dilihat di HP / ubnetwork.');
+          } else {
+            var msg = (out.results || []).map(function (x) { return x.target + ': ' + (x.message || x.status); }).join(' | ');
+            UBL.toast('Gagal sync (' + msg + '). Data tetap aman di lokal.');
+          }
+        }).finally(function () {
+          btn.disabled = false;
+          btn.textContent = '☁ Kirim ke Server (1x Sync)';
+        });
+      };
+
+      [inpCcr, inpPic, inpSpv, inpOtHours].forEach(function (el) {
+        el.addEventListener('change', function () { persistLocal(true); });
+      });
+      [inpDate, inpShift, inpSession].forEach(function (el) {
+        el.addEventListener('change', loadCurrent);
+      });
+
+      UBL.getSettings().then(function (s) {
+        cfg = s;
+        inpDate.value = qs.get('date') || UBL.wibToday();
+        inpShift.value = qs.get('shift') || (cfg.role === 'WHITE' ? 'WHITE' : 'RED');
+        loadCurrent();
+      });
+    })();
+  </script>
+</body>
+</html>

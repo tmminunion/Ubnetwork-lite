@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Display KPI Productivity (1-31) | UBnetwork Lite</title>
+  <link rel="stylesheet" href="assets/app.css" />
+  <style>
+    .board-sheet {
+      background: #0b1220;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 20px;
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+    .chart-wrap {
+      background: rgba(2, 6, 23, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 16px;
+      padding: 12px 14px;
+      overflow-x: auto;
+    }
+    .matrix-table th, .matrix-table td {
+      padding: 5px 4px;
+      text-align: center;
+      font-size: 10.5px;
+      border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+    .matrix-table th:first-child, .matrix-table td:first-child {
+      text-align: left;
+      padding-left: 8px;
+      font-weight: 800;
+      position: sticky;
+      left: 0;
+      background: #0f172a;
+      min-width: 82px;
+    }
+    @media print {
+      body { background: #fff !important; color: #0f172a !important; }
+      body::before, .topbar, .no-print { display: none !important; }
+      .container { max-width: 100% !important; padding: 0 !important; }
+      .board-sheet, .glass-soft, .chart-wrap {
+        background: #fff !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+      }
+      .matrix-table th:first-child, .matrix-table td:first-child { background: #f1f5f9 !important; color: #0f172a !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <a href="productivity.html" class="btn">← Productivity Hub</a>
+        <div>
+          <div class="brand-title">Display KPI Productivity (1–31)</div>
+          <div class="brand-sub">GL Management Board 16:9 · Data Lokal IndexedDB (Offline-First)</div>
+        </div>
+      </div>
+      <div class="nav-right no-print">
+        <input id="inpMonth" class="input mono" type="month" style="width:auto;padding:6px 10px" />
+        <select id="inpShift" class="select" style="width:auto;padding:6px 10px;font-weight:700">
+          <option value="ALL">Semua Shift (RED + WHITE)</option>
+          <option value="RED">Shift RED saja</option>
+          <option value="WHITE">Shift WHITE saja</option>
+        </select>
+        <button id="btnPullServer" class="btn btn-cyan" type="button">⬇ Tarik dari Server</button>
+        <button id="btnFullscreen" class="btn" type="button">⛶ Fullscreen</button>
+        <button id="btnPrint" class="btn btn-emerald" type="button">🖨 Cetak / PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="board-sheet">
+      <!-- Board Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:10px">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span class="pill pill-emerald">KPI PILLAR · PRODUCTIVITY</span>
+            <span id="boardLine" class="pill pill-cyan">LINE: UB ASSY</span>
+            <span id="boardPeriod" class="pill">BULAN: -</span>
+          </div>
+          <h1 style="margin:6px 0 0;font-size:20px;font-weight:900;letter-spacing:-0.01em">
+            Monthly Production Output &amp; Efficiency Board (Target ≥ 98%)
+          </h1>
+        </div>
+        <div style="text-align:right;font-size:11.5px;color:var(--muted)">
+          <div>Sumber: <b style="color:#6ee7b7">IndexedDB Lokal</b></div>
+          <div id="boardUpdated" class="mono">Diperbarui: -</div>
+        </div>
+      </div>
+
+      <!-- KPI Summary Row -->
+      <div class="grid-4">
+        <div class="glass-soft" style="padding:12px 14px">
+          <div style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase">Total Plan / Actual</div>
+          <div id="kTotalOut" class="mono" style="font-size:22px;font-weight:900;margin-top:2px">0 / 0</div>
+          <div id="kTotalDiff" class="mono" style="font-size:11px;color:var(--muted)">Diff: 0 Unit</div>
+        </div>
+        <div class="glass-soft" style="padding:12px 14px">
+          <div style="font-size:10px;color:#6ee7b7;font-weight:800;text-transform:uppercase">Efisiensi Bulanan</div>
+          <div id="kEff" class="mono" style="font-size:24px;font-weight:900;color:#6ee7b7;margin-top:2px">0.0%</div>
+          <div style="font-size:11px;color:var(--muted)">Target KPI: ≥ 98.0%</div>
+        </div>
+        <div class="glass-soft" style="padding:12px 14px">
+          <div style="font-size:10px;color:#fcd34d;font-weight:800;text-transform:uppercase">Total Line Stop / Delay</div>
+          <div id="kDelay" class="mono" style="font-size:22px;font-weight:900;color:#fcd34d;margin-top:2px">0 min</div>
+          <div id="kDelaySplit" class="mono" style="font-size:11px;color:var(--muted)">INT: 0m · EXT: 0m</div>
+        </div>
+        <div class="glass-soft" style="padding:12px 14px">
+          <div style="font-size:10px;color:#d8b4fe;font-weight:800;text-transform:uppercase">Hari Aktif / Laporan</div>
+          <div id="kDays" class="mono" style="font-size:22px;font-weight:900;color:#d8b4fe;margin-top:2px">0 Hari</div>
+          <div id="kSyncCount" class="mono" style="font-size:11px;color:var(--muted)">Synced: 0 · Draft: 0</div>
+        </div>
+      </div>
+
+      <!-- SVG Efficiency Bar Chart (Tanggal 1 - 31) -->
+      <div class="chart-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:800;color:#e2e8f0">Grafik Efisiensi Produksi Harian (Tanggal 1–31)</div>
+          <div style="display:flex;gap:10px;font-size:10.5px;color:var(--muted)">
+            <span><b style="color:#10b981">■</b> ≥ 98% (OK)</span>
+            <span><b style="color:#f59e0b">■</b> 90–97.9%</span>
+            <span><b style="color:#f43f5e">■</b> &lt; 90% (NG)</span>
+            <span><b style="color:#38bdf8">---</b> Target 98%</span>
+          </div>
+        </div>
+        <svg id="effChart" viewBox="0 0 960 210" style="width:100%;min-width:740px;height:auto;display:block"></svg>
+      </div>
+
+      <!-- 1-31 Matrix Table -->
+      <div style="overflow-x:auto">
+        <table class="matrix-table">
+          <thead id="matrixHead"></thead>
+          <tbody id="matrixBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Top Chokotei / Problem Summary -->
+      <div class="glass-soft" style="padding:12px 14px">
+        <div style="font-size:12px;font-weight:800;margin-bottom:8px;color:#fda4af">Top Problem / Chokotei Bulan Ini (Dari Checksheet Lokal)</div>
+        <div id="topProblems" style="font-size:12px;color:var(--muted)">Belum ada catatan problem pada bulan ini.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/db.js"></script>
+  <script>
+    (function () {
+      var inpMonth = document.getElementById('inpMonth');
+      var inpShift = document.getElementById('inpShift');
+      var cfg = null;
+
+      function currentYm() {
+        return UBL.wibToday().slice(0, 7);
+      }
+
+      function aggregateSlotStats(rep) {
+        var tp = 0, ta = 0, intD = 0, extD = 0;
+        if (Array.isArray(rep.slots) && rep.slots.length) {
+          rep.slots.forEach(function (sl) {
+            tp += Number(sl.plan || 0);
+            if (sl.act !== '' && sl.act !== null && sl.act !== undefined) ta += Number(sl.act || 0);
+            var d = Number(sl.delayMin || 0);
+            if (sl.category === 'EXT') extD += d; else intD += d;
+          });
+        } else {
+          tp = Number(rep.totalPlan || 0);
+          ta = Number(rep.totalAct || 0);
+          intD = Number(rep.intDelayMin || 0);
+          extD = Number(rep.extDelayMin || 0);
+        }
+        return { tp: tp, ta: ta, intD: intD, extD: extD };
+      }
+
+      function renderChart(daysData) {
+        var svg = document.getElementById('effChart');
+        var W = 960, H = 210, padL = 36, padR = 12, padT = 16, padB = 26;
+        var plotW = W - padL - padR;
+        var plotH = H - padT - padB;
+        var maxY = 110;
+        var out = [];
+
+        // Grid lines (0, 50, 80, 98, 100)
+        [0, 50, 80, 100].forEach(function (v) {
+          var y = padT + plotH - (v / maxY) * plotH;
+          out.push('<line x1="' + padL + '" y1="' + y.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y.toFixed(1) + '" stroke="rgba(148,163,184,0.16)" stroke-width="1"/>');
+          out.push('<text x="' + (padL - 5) + '" y="' + (y + 3).toFixed(1) + '" fill="#94a3b8" font-size="9" text-anchor="end">' + v + '%</text>');
+        });
+
+        // Target 98% line
+        var y98 = padT + plotH - (98 / maxY) * plotH;
+        out.push('<line x1="' + padL + '" y1="' + y98.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + y98.toFixed(1) + '" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="5,4"/>');
+
+        var step = plotW / 31;
+        var barW = Math.max(12, step - 7);
+        for (var d = 1; d <= 31; d++) {
+          var info = daysData[d];
+          var x = padL + (d - 1) * step + (step - barW) / 2;
+          out.push('<text x="' + (x + barW / 2).toFixed(1) + '" y="' + (H - 8) + '" fill="#94a3b8" font-size="9.5" text-anchor="middle">' + d + '</text>');
+          if (info && info.tp > 0) {
+            var eff = Math.min(110, (info.ta / info.tp) * 100);
+            var h = (eff / maxY) * plotH;
+            var y = padT + plotH - h;
+            var color = eff >= 98 ? '#10b981' : (eff >= 90 ? '#f59e0b' : '#f43f5e');
+            out.push('<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + barW.toFixed(1) + '" height="' + Math.max(2, h).toFixed(1) + '" rx="3" fill="' + color + '"/>');
+            out.push('<text x="' + (x + barW / 2).toFixed(1) + '" y="' + Math.max(10, y - 3).toFixed(1) + '" fill="#e2e8f0" font-size="8.5" font-weight="700" text-anchor="middle">' + Math.round((info.ta / info.tp) * 100) + '</text>');
+          }
+        }
+        svg.innerHTML = out.join('');
+      }
+
+      function renderMatrix(daysData) {
+        var head = '<tr><th>Tanggal</th>';
+        for (var d = 1; d <= 31; d++) head += '<th>' + d + '</th>';
+        head += '</tr>';
+        document.getElementById('matrixHead').innerHTML = head;
+
+        var rows = [
+          { label: 'Plan', fn: function (x) { return x && x.tp ? x.tp : '-'; } },
+          { label: 'Actual', fn: function (x) { return x && x.tp ? '<b style="color:#6ee7b7">' + x.ta + '</b>' : '-'; } },
+          { label: 'Diff', fn: function (x) {
+            if (!x || !x.tp) return '-';
+            var df = x.ta - x.tp;
+            return '<span style="color:' + (df < 0 ? '#fda4af' : '#6ee7b7') + '">' + (df >= 0 ? '+' : '') + df + '</span>';
+          }},
+          { label: 'Eff (%)', fn: function (x) {
+            if (!x || !x.tp) return '-';
+            var ef = (x.ta / x.tp) * 100;
+            var c = ef >= 98 ? '#6ee7b7' : (ef >= 90 ? '#fcd34d' : '#fda4af');
+            return '<b style="color:' + c + '">' + ef.toFixed(0) + '%</b>';
+          }},
+          { label: 'Delay (m)', fn: function (x) { return x && (x.intD + x.extD) > 0 ? '<span style="color:#fcd34d">' + (x.intD + x.extD) + '</span>' : '-'; } }
+        ];
+
+        var bodyHtml = rows.map(function (r) {
+          var tr = '<tr><td>' + r.label + '</td>';
+          for (var d = 1; d <= 31; d++) tr += '<td class="mono">' + r.fn(daysData[d]) + '</td>';
+          return tr + '</tr>';
+        }).join('');
+        document.getElementById('matrixBody').innerHTML = bodyHtml;
+      }
+
+      function renderBoard() {
+        var ym = inpMonth.value || currentYm();
+        var shFilter = inpShift.value || 'ALL';
+        document.getElementById('boardLine').textContent = 'LINE: ' + (cfg.lineName || 'UB ASSY');
+        document.getElementById('boardPeriod').textContent = 'BULAN: ' + ym + ' · ' + shFilter;
+        document.getElementById('boardUpdated').textContent = 'Diperbarui: ' + new Date().toLocaleTimeString('id-ID');
+
+        UBL.listReports().then(function (all) {
+          var list = all.filter(function (r) {
+            if (!String(r.tanggal || '').startsWith(ym)) return false;
+            if (shFilter !== 'ALL' && r.shift !== shFilter) return false;
+            return true;
+          });
+
+          var daysData = {};
+          var sumPlan = 0, sumAct = 0, sumInt = 0, sumExt = 0;
+          var syncedCnt = 0, draftCnt = 0;
+          var problems = [];
+
+          list.forEach(function (r) {
+            var dayNum = parseInt(String(r.tanggal).slice(8, 10), 10);
+            var st = aggregateSlotStats(r);
+            sumPlan += st.tp; sumAct += st.ta; sumInt += st.intD; sumExt += st.extD;
+            if (r.syncStatus === 'synced') syncedCnt++; else draftCnt++;
+
+            if (!daysData[dayNum]) daysData[dayNum] = { tp: 0, ta: 0, intD: 0, extD: 0 };
+            daysData[dayNum].tp += st.tp;
+            daysData[dayNum].ta += st.ta;
+            daysData[dayNum].intD += st.intD;
+            daysData[dayNum].extD += st.extD;
+
+            (r.slots || []).forEach(function (sl) {
+              if (sl.problem && String(sl.problem).trim()) {
+                problems.push({
+                  tanggal: r.tanggal,
+                  shift: r.shift,
+                  delay: Number(sl.delayMin || 0),
+                  cat: sl.category || 'INT',
+                  problem: String(sl.problem).trim(),
+                  cm: String(sl.countermeasure || '').trim()
+                });
+              }
+            });
+          });
+
+          var effPct = sumPlan > 0 ? ((sumAct / sumPlan) * 100).toFixed(1) : '0.0';
+          var diff = sumAct - sumPlan;
+          document.getElementById('kTotalOut').textContent = sumPlan + ' / ' + sumAct;
+          document.getElementById('kTotalDiff').textContent = 'Diff: ' + (diff >= 0 ? '+' : '') + diff + ' Unit';
+          var kEff = document.getElementById('kEff');
+          kEff.textContent = effPct + '%';
+          kEff.style.color = parseFloat(effPct) >= 98 ? '#6ee7b7' : (parseFloat(effPct) >= 90 ? '#fcd34d' : '#fda4af');
+          document.getElementById('kDelay').textContent = (sumInt + sumExt) + ' min';
+          document.getElementById('kDelaySplit').textContent = 'INT: ' + sumInt + 'm · EXT: ' + sumExt + 'm';
+          document.getElementById('kDays').textContent = Object.keys(daysData).length + ' Hari (' + list.length + ' Shift)';
+          document.getElementById('kSyncCount').textContent = 'Synced: ' + syncedCnt + ' · Draft: ' + draftCnt;
+
+          renderChart(daysData);
+          renderMatrix(daysData);
+
+          problems.sort(function (a, b) { return b.delay - a.delay; });
+          var tpEl = document.getElementById('topProblems');
+          if (!problems.length) {
+            tpEl.innerHTML = 'Belum ada catatan problem / chokotei pada bulan ' + ym + '.';
+          } else {
+            tpEl.innerHTML = problems.slice(0, 6).map(function (p) {
+              return '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid rgba(148,163,184,0.12)">' +
+                '<div><b class="mono" style="color:#e2e8f0">' + p.tanggal + ' (' + p.shift + ')</b> · <span style="color:#fda4af">' + p.problem + '</span>' +
+                (p.cm ? ' <span style="color:#6ee7b7">→ ' + p.cm + '</span>' : '') + '</div>' +
+                '<span class="pill pill-amber mono">' + p.delay + 'm ' + p.cat + '</span></div>';
+            }).join('');
+          }
+        });
+      }
+
+      document.getElementById('btnPullServer').onclick = function () {
+        var ym = inpMonth.value || currentYm();
+        var btn = document.getElementById('btnPullServer');
+        if (!cfg.serverApiUrl) {
+          UBL.toast('URL API Server belum diatur di Pengaturan.');
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = '⏳ Menarik...';
+        var headers = { 'Accept': 'application/json' };
+        if (cfg.apiKey) headers['x-ub-api-key'] = cfg.apiKey;
+        fetch(cfg.serverApiUrl.replace(/\?.*$/, '') + '?action=monthly_reports&year_month=' + encodeURIComponent(ym), { headers: headers })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            var rows = Array.isArray(j.data) ? j.data : [];
+            if (!rows.length) {
+              UBL.toast('Tidak ada laporan di server untuk bulan ' + ym + '.');
+              return;
+            }
+            return Promise.all(rows.map(function (r) {
+              var dt = String(r.tanggal || '').slice(0, 10);
+              var sh = String(r.shift || 'RED').toUpperCase();
+              var ln = r.line_name || cfg.lineName;
+              var id = UBL.makeReportId(dt, sh, ln);
+              return UBL.getReport(id).then(function (ex) {
+                if (ex && ex.syncStatus !== 'synced') return; // jangan timpa draft lokal yg belum sync
+                return UBL.saveReport({
+                  id: id,
+                  tanggal: dt,
+                  shift: sh,
+                  session: String(r.template_code || '').toLowerCase().indexOf('malam') >= 0 ? 'night' : 'day',
+                  lineName: ln,
+                  taktTime: Number(r.takt_time || 2.4),
+                  ccrPlan: Number(r.ccr_plan || 0),
+                  picName: r.pic_name || '',
+                  spvName: r.spv_name || '',
+                  noBodyStart: r.no_body_start || '',
+                  noBodyFinish: r.no_body_finish || '',
+                  jamStopProduksi: r.jam_stop_produksi || '',
+                  totalPlan: Number(r.total_plan || 0),
+                  totalAct: Number(r.total_act || 0),
+                  intDelayMin: Number(r.int_delay_min || 0),
+                  extDelayMin: Number(r.ext_delay_min || 0),
+                  slots: ex ? ex.slots : [],
+                  syncStatus: 'synced'
+                });
+              });
+            })).then(function () {
+              UBL.toast('Berhasil tarik ' + rows.length + ' laporan dari server ke IndexedDB lokal.');
+              renderBoard();
+            });
+          })
+          .catch(function (e) { UBL.toast('Gagal tarik data server: ' + e.message); })
+          .finally(function () {
+            btn.disabled = false;
+            btn.textContent = '⬇ Tarik dari Server';
+          });
+      };
+
+      document.getElementById('btnFullscreen').onclick = function () {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function () {});
+        else document.exitFullscreen().catch(function () {});
+      };
+      document.getElementById('btnPrint').onclick = function () { window.print(); };
+
+      inpMonth.onchange = renderBoard;
+      inpShift.onchange = renderBoard;
+
+      UBL.getSettings().then(function (s) {
+        cfg = s;
+        inpMonth.value = currentYm();
+        renderBoard();
+      });
+    })();
+  </script>
+</body>
+</html>

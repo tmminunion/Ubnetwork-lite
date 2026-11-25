@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Environment · Air Leakage (#lub / #kaizen #l10) | UBnetwork Lite</title>
+  <link rel="stylesheet" href="assets/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <a href="index.html" class="btn">← Hub Utama</a>
+        <div>
+          <div class="brand-title">Environment · Air Leakage (#lub · #kaizen #l10)</div>
+          <div class="brand-sub">Checksheet Harian &amp; Temuan Lokal IndexedDB · 1-Klik Sync SharePoint</div>
+        </div>
+      </div>
+      <div class="nav-right">
+        <button id="btnAddFinding" class="btn btn-emerald" type="button">+ Temuan #lub</button>
+        <button id="btnSyncAllAir" class="btn btn-cyan" type="button">☁ Sync SharePoint (1 Klik)</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="display:grid;gap:14px">
+    <!-- Checksheet Harian -->
+    <section class="glass" style="padding:16px;display:grid;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="font-size:15px;font-weight:900">1. Checksheet Harian Air Leakage</div>
+        <span id="csSyncPill" class="pill pill-amber">● Draft Lokal</span>
+      </div>
+      <div class="grid-3">
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">TANGGAL</label>
+          <input id="csDate" class="input mono" type="date" />
+        </div>
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">SHIFT</label>
+          <select id="csShift" class="select">
+            <option value="red">🔴 RED</option>
+            <option value="white">⚪ WHITE</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">PEMERIKSA (PIC)</label>
+          <input id="csInspector" class="input" placeholder="Nama pemeriksa..." />
+        </div>
+      </div>
+      <div id="csRows" style="display:grid;gap:8px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <span id="csSummary" style="font-size:12px;color:var(--muted)">Total Dicek: 6 · NG: 0</span>
+        <button id="btnSaveCs" class="btn btn-emerald" type="button">💾 Simpan Checksheet Lokal</button>
+      </div>
+    </section>
+
+    <!-- Temuan #lub & Kaizen #l10 -->
+    <section class="glass" style="padding:16px;display:grid;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div style="font-size:15px;font-weight:900">2. Daftar Temuan #lub &amp; Penanggulangan #kaizen #l10</div>
+        <span id="findCount" class="pill pill-cyan">0 Temuan</span>
+      </div>
+      <div id="findingsGrid" class="grid-2"></div>
+    </section>
+  </main>
+
+  <!-- Modal Tambah/Edit Temuan #lub -->
+  <div id="airModal" class="modal-backdrop">
+    <div class="modal-card" style="display:grid;gap:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:8px">
+        <h3 id="modalTitle" style="margin:0;font-size:15px;font-weight:800">Tambah Temuan #lub</h3>
+        <button id="btnCloseAir" class="btn" type="button" style="padding:4px 9px">✕</button>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">Area / Station</label>
+          <input id="fArea" class="input" placeholder="Station 2 Jig Clamp" />
+        </div>
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">Pelapor</label>
+          <input id="fMember" class="input" placeholder="Nama pelapor" />
+        </div>
+      </div>
+      <div>
+        <label style="font-size:10.5px;color:#fcd34d;font-weight:700;display:block;margin-bottom:4px">Problem Angin Bocor (#lub)</label>
+        <textarea id="fProblem" class="textarea" rows="2" placeholder="#lub Selang angin bocor di fitting..."></textarea>
+      </div>
+      <div class="grid-3">
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">Tingkat</label>
+          <select id="fSeverity" class="select"><option value="kecil">Kecil</option><option value="sedang" selected>Sedang</option><option value="besar">Besar</option></select>
+        </div>
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">PIC</label>
+          <input id="fPic" class="input" />
+        </div>
+        <div>
+          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">Status</label>
+          <select id="fStatus" class="select"><option value="open">Open</option><option value="progress">Progress</option><option value="closed">Closed</option></select>
+        </div>
+      </div>
+      <div class="glass-soft" style="padding:10px;border-color:rgba(6,182,212,0.35);display:grid;gap:8px">
+        <div style="font-size:11.5px;font-weight:800;color:#67e8f9">Penanggulangan &amp; Kaizen (#kaizen #l10)</div>
+        <textarea id="fCm" class="textarea" rows="2" placeholder="Tindakan perbaikan (#kaizen #l10)..."></textarea>
+        <input id="fKzTitle" class="input" placeholder="Judul Kaizen #l10 (opsional)" />
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
+        <button id="btnCancelAir" class="btn" type="button">Batal</button>
+        <button id="btnSaveAir" class="btn btn-emerald" type="button">💾 Simpan Lokal</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/db.js"></script>
+  <script>
+    (function () {
+      var curCheck = null;
+      var editingId = null;
+      var csDate = document.getElementById('csDate');
+      var csShift = document.getElementById('csShift');
+      var csInspector = document.getElementById('csInspector');
+      var csRows = document.getElementById('csRows');
+      var modal = document.getElementById('airModal');
+
+      function renderCheck() {
+        var ngCount = (curCheck.items || []).filter(function (i) { return i.status === 'NG'; }).length;
+        document.getElementById('csSummary').textContent = 'Total Dicek: ' + curCheck.items.length + ' · Titik Bocor (NG): ' + ngCount;
+        var pill = document.getElementById('csSyncPill');
+        pill.textContent = curCheck.syncStatus === 'synced' ? '✓ Tersinkron SharePoint' : '● Draft Lokal';
+        pill.className = 'pill ' + (curCheck.syncStatus === 'synced' ? 'pill-emerald' : 'pill-amber');
+
+        csRows.innerHTML = '';
+        curCheck.items.forEach(function (it, idx) {
+          var div = document.createElement('div');
+          div.className = 'glass-soft';
+          div.style.cssText = 'padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap';
+          div.innerHTML =
+            '<div><div style="font-size:12.5px;font-weight:800"><span class="mono" style="color:#67e8f9">' + it.code + '</span> ' + it.point + '</div>' +
+            '<div style="font-size:11px;color:var(--muted)">Area: ' + it.area + '</div></div>' +
+            '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">' +
+              '<input data-i="' + idx + '" class="input cs-note" style="width:170px;padding:5px 8px;font-size:12px" placeholder="Catatan..." value="' + String(it.note || '').replace(/"/g, '&quot;') + '" />' +
+              '<button data-i="' + idx + '" data-st="OK" class="btn ' + (it.status === 'OK' ? 'btn-emerald' : '') + ' cs-st" style="padding:5px 10px" type="button">OK</button>' +
+              '<button data-i="' + idx + '" data-st="NG" class="btn ' + (it.status === 'NG' ? 'btn-rose' : '') + ' cs-st" style="padding:5px 10px" type="button">NG (#lub)</button>' +
+              (it.status === 'NG' ? '<button data-i="' + idx + '" class="btn btn-purple cs-mk" style="padding:5px 9px" type="button">+ Input #lub</button>' : '') +
+            '</div>';
+          csRows.appendChild(div);
+        });
+
+        csRows.querySelectorAll('.cs-note').forEach(function (el) {
+          el.onchange = function () {
+            curCheck.items[parseInt(el.getAttribute('data-i'), 10)].note = el.value;
+            curCheck.syncStatus = 'draft';
+          };
+        });
+        csRows.querySelectorAll('.cs-st').forEach(function (b) {
+          b.onclick = function () {
+            curCheck.items[parseInt(b.getAttribute('data-i'), 10)].status = b.getAttribute('data-st');
+            curCheck.syncStatus = 'draft';
+            renderCheck();
+          };
+        });
+        csRows.querySelectorAll('.cs-mk').forEach(function (b) {
+          b.onclick = function () {
+            var pt = curCheck.items[parseInt(b.getAttribute('data-i'), 10)];
+            openModal(null, {
+              area: pt.area,
+              member: csInspector.value.trim(),
+              problem: '#lub Kebocoran angin di ' + pt.point + ' (' + pt.area + ')' + (pt.note ? ': ' + pt.note : '')
+            });
+          };
+        });
+      }
+
+      function loadCheck() {
+        UBL.getAirCheck(csDate.value || UBL.wibToday(), csShift.value || 'red').then(function (doc) {
+          curCheck = doc;
+          csInspector.value = doc.inspector || '';
+          renderCheck();
+        });
+      }
+
+      function renderFindings() {
+        UBL.listAirFindings().then(function (list) {
+          document.getElementById('findCount').textContent = list.length + ' Temuan';
+          var grid = document.getElementById('findingsGrid');
+          if (!list.length) {
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);font-size:12.5px">Belum ada temuan #lub tersimpan di lokal.</div>';
+            return;
+          }
+          grid.innerHTML = '';
+          list.forEach(function (it) {
+            var card = document.createElement('div');
+            card.className = 'glass-soft';
+            card.style.cssText = 'padding:14px;display:grid;gap:8px';
+            card.innerHTML =
+              '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">' +
+                '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+                  '<span class="pill pill-amber mono">#' + (it.remoteId || it.id) + '</span>' +
+                  '<span class="pill ' + (it.status === 'closed' ? 'pill-emerald' : 'pill-rose') + '">' + String(it.status || 'open').toUpperCase() + '</span>' +
+                  (it.countermeasure ? '<span class="pill pill-cyan">#kaizen #l10</span>' : '') +
+                  '<span class="pill ' + (it.syncStatus === 'synced' ? 'pill-emerald' : 'pill-amber') + '">' + (it.syncStatus === 'synced' ? '✓ Synced' : '● Lokal') + '</span>' +
+                '</div>' +
+                '<span class="mono" style="font-size:11px;color:var(--muted)">' + it.date + '</span>' +
+              '</div>' +
+              '<div style="font-size:13px;font-weight:800">' + (it.area || 'Area Line') + '</div>' +
+              '<div style="font-size:12px;color:#cbd5e1">' + it.problem + '</div>' +
+              (it.countermeasure ? '<div style="font-size:11.5px;color:#6ee7b7;background:rgba(6,78,59,0.35);padding:8px;border-radius:10px"><b>#kaizen #l10:</b> ' + it.countermeasure + '</div>' : '') +
+              '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)">' +
+                '<span>Pelapor: ' + (it.member || '-') + ' · PIC: ' + (it.pic || '-') + '</span>' +
+                '<div style="display:flex;gap:6px">' +
+                  '<button data-id="' + it.id + '" class="btn f-edit" style="padding:4px 9px" type="button">Edit / #l10</button>' +
+                  '<button data-id="' + it.id + '" class="btn btn-rose f-del" style="padding:4px 9px" type="button">Hapus</button>' +
+                '</div>' +
+              '</div>';
+            grid.appendChild(card);
+          });
+
+          grid.querySelectorAll('.f-edit').forEach(function (b) {
+            b.onclick = function () {
+              var id = b.getAttribute('data-id');
+              var found = list.find(function (x) { return x.id === id; });
+              if (found) openModal(found);
+            };
+          });
+          grid.querySelectorAll('.f-del').forEach(function (b) {
+            b.onclick = function () {
+              var id = b.getAttribute('data-id');
+              if (!confirm('Hapus temuan lokal ini?')) return;
+              UBL.deleteAirFinding(id).then(function () {
+                UBL.toast('Temuan dihapus dari lokal.');
+                renderFindings();
+              });
+            };
+          });
+        });
+      }
+
+      function openModal(existing, prefill) {
+        editingId = existing ? existing.id : null;
+        document.getElementById('modalTitle').textContent = existing ? ('Update Temuan #' + (existing.remoteId || existing.id)) : 'Tambah Temuan #lub';
+        document.getElementById('fArea').value = (existing && existing.area) || (prefill && prefill.area) || '';
+        document.getElementById('fMember').value = (existing && existing.member) || (prefill && prefill.member) || '';
+        document.getElementById('fProblem').value = (existing && existing.problem) || (prefill && prefill.problem) || '';
+        document.getElementById('fSeverity').value = (existing && existing.severity) || 'sedang';
+        document.getElementById('fPic').value = (existing && existing.pic) || '';
+        document.getElementById('fStatus').value = (existing && existing.status) || 'open';
+        document.getElementById('fCm').value = (existing && existing.countermeasure) || '';
+        document.getElementById('fKzTitle').value = (existing && existing.kaizenTitle) || '';
+        modal.classList.add('open');
+      }
+
+      document.getElementById('btnAddFinding').onclick = function () { openModal(null); };
+      document.getElementById('btnCloseAir').onclick = function () { modal.classList.remove('open'); };
+      document.getElementById('btnCancelAir').onclick = function () { modal.classList.remove('open'); };
+
+      document.getElementById('btnSaveAir').onclick = function () {
+        var prob = document.getElementById('fProblem').value.trim();
+        if (!prob) { UBL.toast('Problem angin bocor wajib diisi.'); return; }
+        var cm = document.getElementById('fCm').value.trim();
+        UBL.listAirFindings().then(function (all) {
+          var ex = editingId ? all.find(function (x) { return x.id === editingId; }) : null;
+          var doc = {
+            id: ex ? ex.id : ('lub_local_' + Date.now()),
+            remoteId: ex ? ex.remoteId : '',
+            date: ex ? ex.date : (csDate.value || UBL.wibToday()),
+            shift: ex ? ex.shift : (csShift.value || 'red'),
+            area: document.getElementById('fArea').value.trim(),
+            member: document.getElementById('fMember').value.trim(),
+            problem: prob,
+            severity: document.getElementById('fSeverity').value,
+            pic: document.getElementById('fPic').value.trim(),
+            status: document.getElementById('fStatus').value,
+            countermeasure: cm,
+            kaizenTitle: document.getElementById('fKzTitle').value.trim(),
+            isKaizen: Boolean(cm),
+            syncStatus: 'draft'
+          };
+          return UBL.saveAirFinding(doc);
+        }).then(function () {
+          modal.classList.remove('open');
+          UBL.toast('Temuan #lub tersimpan di database lokal.');
+          renderFindings();
+        });
+      };
+
+      document.getElementById('btnSaveCs').onclick = function () {
+        curCheck.inspector = csInspector.value.trim();
+        curCheck.syncStatus = 'draft';
+        UBL.saveAirCheck(curCheck).then(function () {
+          UBL.toast('Checksheet harian tersimpan di lokal.');
+          renderCheck();
+        });
+      };
+
+      document.getElementById('btnSyncAllAir').onclick = function () {
+        var btn = document.getElementById('btnSyncAllAir');
+        btn.disabled = true;
+        btn.textContent = '⏳ Sync SharePoint...';
+        curCheck.inspector = csInspector.value.trim();
+        UBL.saveAirCheck(curCheck).then(function () {
+          return UBL.syncAirCheckToServer(curCheck);
+        }).then(function () {
+          return UBL.listAirFindings().then(function (all) {
+            var drafts = all.filter(function (x) { return x.syncStatus !== 'synced'; });
+            return drafts.reduce(function (p, it) {
+              return p.then(function () { return UBL.syncAirFindingToServer(it); });
+            }, Promise.resolve()).then(function () { return drafts.length; });
+          });
+        }).then(function (cnt) {
+          UBL.toast('Sync selesai: Checksheet + ' + cnt + ' temuan #lub dikirim ke SharePoint.');
+          renderCheck();
+          renderFindings();
+        }).finally(function () {
+          btn.disabled = false;
+          btn.textContent = '☁ Sync SharePoint (1 Klik)';
+        });
+      };
+
+      csDate.value = UBL.wibToday();
+      csDate.onchange = loadCheck;
+      csShift.onchange = loadCheck;
+      loadCheck();
+      renderFindings();
+    })();
+  </script>
+</body>
+</html>

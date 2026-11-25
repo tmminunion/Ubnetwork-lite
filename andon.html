@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Andon Intranet Monitor | UBnetwork Lite</title>
+  <link rel="stylesheet" href="assets/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <a href="index.html" class="btn">← Hub Utama</a>
+        <div>
+          <div class="brand-title">Andon Monitor (Intranet 172.16.2.201)</div>
+          <div class="brand-sub">Auto-Refresh 20 detik · Bebas Mixed Content di Edge Lokal</div>
+        </div>
+      </div>
+      <div class="nav-right">
+        <select id="lineSel" class="select" style="width:auto;padding:6px 10px;font-weight:700">
+          <option value="overall_ub.jpg">Underbody (U/B)</option>
+          <option value="overall_mb.jpg">Main Body (M/B)</option>
+          <option value="overall_sb.jpg">Side Body (S/B)</option>
+          <option value="overall_sh.jpg">Shell Body (S/H)</option>
+        </select>
+        <button id="btnRefresh" class="btn btn-cyan" type="button">↻ Refresh</button>
+        <button id="btnFs" class="btn btn-emerald" type="button">⛶ Fullscreen TV</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="glass" style="padding:14px;text-align:center">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px;color:var(--muted)">
+        <span id="andonUrl" class="mono">http://172.16.2.201/andon/overall/overall_ub.jpg</span>
+        <span id="andonClock" class="mono">-</span>
+      </div>
+      <img id="andonImg" alt="Andon Intranet" style="width:100%;max-height:78vh;object-fit:contain;border-radius:12px;background:#020617;border:1px solid var(--border)" />
+      <div id="andonErr" style="display:none;padding:24px;color:#fda4af;font-size:13px">
+        Gambar Andon (<code>172.16.2.201</code>) hanya dapat dimuat jika PC terhubung ke jaringan intranet pabrik TMMIN.
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      var sel = document.getElementById('lineSel');
+      var img = document.getElementById('andonImg');
+      var err = document.getElementById('andonErr');
+      var urlEl = document.getElementById('andonUrl');
+      var clockEl = document.getElementById('andonClock');
+
+      function refreshImg() {
+        var code = sel.value;
+        var base = 'http://172.16.2.201/andon/overall/' + code;
+        urlEl.textContent = base;
+        err.style.display = 'none';
+        img.style.display = 'block';
+        img.src = base + '?t=' + Date.now();
+        clockEl.textContent = 'Refresh: ' + new Date().toLocaleTimeString('id-ID');
+      }
+
+      img.onerror = function () {
+        img.style.display = 'none';
+        err.style.display = 'block';
+      };
+      sel.onchange = refreshImg;
+      document.getElementById('btnRefresh').onclick = refreshImg;
+      document.getElementById('btnFs').onclick = function () {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function () {});
+        else document.exitFullscreen().catch(function () {});
+      };
+
+      refreshImg();
+      setInterval(refreshImg, 20000);
+    })();
+  </script>
+</body>
+</html>

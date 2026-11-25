@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Daily Activity &amp; Sync Center | UBnetwork Lite</title>
+  <link rel="stylesheet" href="assets/app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <a href="productivity.html" class="btn">← Productivity Hub</a>
+        <div>
+          <div class="brand-title">Daily Activity &amp; Sync Center</div>
+          <div class="brand-sub">Rekap Laporan Lokal (IndexedDB) · Batch 1-Klik Sync &amp; Backup JSON</div>
+        </div>
+      </div>
+      <div class="nav-right">
+        <button id="btnExport" class="btn" type="button">⬇ Backup JSON</button>
+        <label class="btn" style="cursor:pointer">
+          ⬆ Restore JSON
+          <input id="inpImport" type="file" accept=".json" style="display:none" />
+        </label>
+        <button id="btnSyncAll" class="btn btn-emerald" type="button">☁ Sync Semua Draft (1 Klik)</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="display:grid;gap:14px">
+    <section class="glass" style="padding:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" data-filter="all" type="button">Semua</button>
+        <button class="btn" data-filter="draft" type="button">Belum Sync</button>
+        <button class="btn" data-filter="synced" type="button">Sudah Sync</button>
+      </div>
+      <span id="roleInfo" class="pill pill-purple">Role: -</span>
+    </section>
+
+    <section class="glass" style="padding:14px;overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>Shift</th>
+            <th>Plan / Actual</th>
+            <th>No Body (Start → Finish)</th>
+            <th>Jam Stop</th>
+            <th>Status Sync</th>
+            <th style="text-align:right">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="dailyBody"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="assets/db.js"></script>
+  <script>
+    (function () {
+      var filter = 'all';
+      var cfg = null;
+      var body = document.getElementById('dailyBody');
+
+      function render() {
+        UBL.listReports().then(function (rows) {
+          var shown = rows.filter(function (r) {
+            if (filter === 'draft') return r.syncStatus !== 'synced';
+            if (filter === 'synced') return r.syncStatus === 'synced';
+            return true;
+          });
+          if (!shown.length) {
+            body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted)">Belum ada laporan tersimpan di database lokal. Buka <a href="checksheet.html" style="color:#6ee7b7;text-decoration:underline">Daily Production Checksheet</a> untuk mulai input.</td></tr>';
+            return;
+          }
+          body.innerHTML = '';
+          shown.forEach(function (r) {
+            var tp = 0, ta = 0;
+            (r.slots || []).forEach(function (s) {
+              tp += Number(s.plan || 0);
+              if (s.act !== '' && s.act !== null) ta += Number(s.act || 0);
+            });
+            var stPill = r.syncStatus === 'synced'
+              ? '<span class="pill pill-emerald">✓ Synced</span>'
+              : (r.syncStatus === 'failed' ? '<span class="pill pill-rose">⚠ Gagal</span>' : '<span class="pill pill-amber">● Draft Lokal</span>');
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+              '<td class="mono" style="font-weight:800">' + r.tanggal + '</td>' +
+              '<td><span class="pill ' + (r.shift === 'RED' ? 'pill-rose' : '') + '">' + r.shift + '</span></td>' +
+              '<td class="mono">' + tp + ' / <b style="color:#6ee7b7">' + ta + '</b></td>' +
+              '<td class="mono">' + (r.noBodyStart || '-') + ' → ' + (r.noBodyFinish || '-') + '</td>' +
+              '<td class="mono">' + (r.jamStopProduksi || '-') + ' WIB</td>' +
+              '<td>' + stPill + '</td>' +
+              '<td style="text-align:right;white-space:nowrap">' +
+                '<a class="btn" style="padding:5px 9px;margin-right:4px" href="checksheet.html?date=' + encodeURIComponent(r.tanggal) + '&shift=' + encodeURIComponent(r.shift) + '">Buka</a>' +
+                '<button class="btn btn-emerald btn-sync-one" data-id="' + r.id + '" style="padding:5px 9px;margin-right:4px" type="button">☁ Sync</button>' +
+                (cfg.role === 'ADMIN' ? '<button class="btn btn-rose btn-del-one" data-id="' + r.id + '" style="padding:5px 9px" type="button">Hapus</button>' : '') +
+              '</td>';
+            body.appendChild(tr);
+          });
+
+          body.querySelectorAll('.btn-sync-one').forEach(function (b) {
+            b.onclick = function () {
+              var id = b.getAttribute('data-id');
+              b.disabled = true;
+              UBL.getReport(id).then(function (rep) {
+                if (!rep) return;
+                return UBL.syncOneReportToServer(rep).then(function (out) {
+                  UBL.toast(out.ok ? ('Sync ' + rep.tanggal + ' (' + rep.shift + ') berhasil!') : 'Sync gagal, data tetap aman di lokal.');
+                  render();
+                });
+              });
+            };
+          });
+
+          body.querySelectorAll('.btn-del-one').forEach(function (b) {
+            b.onclick = function () {
+              var id = b.getAttribute('data-id');
+              if (!confirm('Hapus laporan lokal ' + id + '?')) return;
+              UBL.deleteReport(id).then(function () {
+                UBL.toast('Laporan lokal dihapus.');
+                render();
+              });
+            };
+          });
+        });
+      }
+
+      document.querySelectorAll('[data-filter]').forEach(function (btn) {
+        btn.onclick = function () {
+          filter = btn.getAttribute('data-filter');
+          render();
+        };
+      });
+
+      document.getElementById('btnSyncAll').onclick = function () {
+        var btn = document.getElementById('btnSyncAll');
+        btn.disabled = true;
+        btn.textContent = '⏳ Sinkronisasi...';
+        UBL.listReports().then(function (rows) {
+          var drafts = rows.filter(function (r) { return r.syncStatus !== 'synced' && UBL.canEditShift(cfg.role, r.shift); });
+          if (!drafts.length) {
+            UBL.toast('Tidak ada draft yang perlu di-sync.');
+            return;
+          }
+          var okCount = 0;
+          return drafts.reduce(function (p, rep) {
+            return p.then(function () {
+              return UBL.syncOneReportToServer(rep).then(function (out) { if (out.ok) okCount++; });
+            });
+          }, Promise.resolve()).then(function () {
+            UBL.toast('Selesai sync: ' + okCount + '/' + drafts.length + ' laporan terkirim.');
+            render();
+          });
+        }).finally(function () {
+          btn.disabled = false;
+          btn.textContent = '☁ Sync Semua Draft (1 Klik)';
+        });
+      };
+
+      document.getElementById('btnExport').onclick = function () {
+        UBL.exportBackupJson().then(function (jsonStr) {
+          var blob = new Blob([jsonStr], { type: 'application/json' });
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'ubnetwork-lite-backup-' + UBL.wibToday() + '.json';
+          a.click();
+          UBL.toast('File backup JSON berhasil diunduh.');
+        });
+      };
+
+      document.getElementById('inpImport').onchange = function (ev) {
+        var file = ev.target.files && ev.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          try {
+            UBL.importBackupJson(String(reader.result || '')).then(function (count) {
+              UBL.toast('Berhasil restore ' + count + ' laporan ke database lokal.');
+              render();
+            });
+          } catch (e) {
+            UBL.toast('File JSON tidak valid.');
+          }
+        };
+        reader.readAsText(file);
+      };
+
+      UBL.getSettings().then(function (s) {
+        cfg = s;
+        document.getElementById('roleInfo').textContent = 'Role: ' + (cfg.role || 'ADMIN');
+        render();
+      });
+    })();
+  </script>
+</body>
+</html>
