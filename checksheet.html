@@ -3,8 +3,112 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Daily Production Checksheet | UBnetwork Lite</title>
+  <title>Daily Production Checksheet (A4) | UBnetwork Lite</title>
   <link rel="stylesheet" href="assets/app.css" />
+  <style>
+    .a4-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 8px 0 36px;
+    }
+    .a4-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      background: #ffffff;
+      color: #0f172a;
+      border-radius: 10px;
+      padding: 10mm 9mm;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 11px;
+    }
+    .a4-sheet table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10.5px;
+      color: #0f172a;
+    }
+    .a4-sheet th, .a4-sheet td {
+      border: 1px solid #1e293b;
+      padding: 3.5px 5px;
+      vertical-align: middle;
+    }
+    .a4-sheet th {
+      background: #e2e8f0;
+      color: #0f172a;
+      font-weight: 800;
+      text-align: center;
+      font-size: 9.5px;
+      letter-spacing: 0.02em;
+    }
+    .a4-input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: #0f172a;
+      font-family: inherit;
+      font-size: 10.5px;
+      padding: 1px 2px;
+      outline: none;
+    }
+    .a4-input:focus {
+      background: #fef9c3;
+      border-radius: 3px;
+    }
+    .a4-num {
+      text-align: center;
+      font-family: ui-monospace, Consolas, monospace;
+      font-weight: 800;
+    }
+    .a4-box-head {
+      background: #0f172a;
+      color: #fff;
+      font-weight: 800;
+      font-size: 9.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .a4-clickable {
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+    .a4-clickable:hover {
+      background: #f5f3ff !important;
+    }
+    .a4-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .a4-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .a4-sign { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+    .a4-sign-box { border: 1px solid #1e293b; text-align: center; font-size: 9.5px; }
+    .a4-sign-head { background: #f1f5f9; border-bottom: 1px solid #1e293b; padding: 3px; font-weight: 800; }
+    .a4-sign-body { height: 42px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; font-weight: 700; }
+
+    @media (max-width: 860px) {
+      .a4-sheet { width: 100%; min-height: auto; padding: 12px; }
+      .a4-grid-2, .a4-grid-3 { grid-template-columns: 1fr; }
+    }
+    @page {
+      size: A4 portrait;
+      margin: 6mm;
+    }
+    @media print {
+      html, body { background: #fff !important; }
+      body::before, .topbar, .toolbar-bar, .modal-backdrop, .toast { display: none !important; }
+      .container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+      .a4-wrap { padding: 0 !important; }
+      .a4-sheet {
+        width: 100% !important;
+        min-height: auto !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+      }
+      .no-print { display: none !important; }
+    }
+  </style>
 </head>
 <body>
   <header class="topbar">
@@ -12,116 +116,210 @@
       <div class="brand">
         <a href="productivity.html" class="btn">← Productivity Hub</a>
         <div>
-          <div class="brand-title">Daily Production Checksheet</div>
-          <div id="subInfo" class="brand-sub">Penyimpanan Lokal IndexedDB · 0 Request Jaringan Selama Shift</div>
+          <div class="brand-title">Daily Production Checksheet (Format A4)</div>
+          <div class="brand-sub">Identik dengan UBnetwork Vercel · Simpan Lokal IndexedDB + 1-Click Sync</div>
         </div>
       </div>
       <div class="nav-right">
         <span id="syncStatusPill" class="pill pill-amber">● Draft Lokal</span>
+        <button id="btnPrintA4" class="btn btn-cyan" type="button">🖨 Cetak A4 / PDF</button>
         <button id="btnSaveLocal" class="btn" type="button">💾 Simpan Lokal</button>
         <button id="btnSyncServer" class="btn btn-emerald" type="button">☁ Kirim ke Server (1x Sync)</button>
       </div>
     </div>
   </header>
 
-  <main class="container" style="display:grid;gap:14px">
-    <!-- Filter Bar -->
-    <section class="glass" style="padding:14px">
-      <div class="grid-4">
-        <div>
-          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">TANGGAL</label>
-          <input id="inpDate" class="input mono" type="date" />
-        </div>
-        <div>
-          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">SHIFT</label>
-          <select id="inpShift" class="select">
+  <main class="container" style="display:grid;gap:12px">
+    <!-- Kontrol Cepat di Atas Kertas A4 -->
+    <section class="glass toolbar-bar" style="padding:12px 14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <input id="inpDate" class="input mono" type="date" style="width:auto;padding:6px 10px" />
+          <select id="inpShift" class="select" style="width:auto;padding:6px 10px;font-weight:800">
             <option value="RED">🔴 RED</option>
             <option value="WHITE">⚪ WHITE</option>
           </select>
-        </div>
-        <div>
-          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">SESI</label>
-          <select id="inpSession" class="select">
-            <option value="day">Siang (07:30 - 16:30+)</option>
-            <option value="night">Malam (20:30 - 05:30+)</option>
+          <select id="inpSession" class="select" style="width:auto;padding:6px 10px;font-weight:700">
+            <option value="day">Shift Siang</option>
+            <option value="night">Shift Malam</option>
           </select>
+          <span style="font-size:11px;color:var(--muted)">CCR:</span>
+          <input id="inpCcr" class="input mono" type="number" min="0" style="width:78px;padding:6px 8px;text-align:center;font-weight:800" />
+          <span style="font-size:11px;color:var(--muted)">OT (Jam):</span>
+          <input id="inpOtHours" class="input mono" type="number" step="0.5" min="0" value="0" style="width:66px;padding:6px 8px;text-align:center;font-weight:800" />
         </div>
-        <div>
-          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">TARGET CCR (UNIT)</label>
-          <input id="inpCcr" class="input mono" type="number" min="0" />
-        </div>
-      </div>
-      <div class="grid-4" style="margin-top:10px">
-        <div>
-          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">PIC (GL)</label>
-          <input id="inpPic" class="input" placeholder="Nama GL" />
-        </div>
-        <div>
-          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">SPV (TL)</label>
-          <input id="inpSpv" class="input" placeholder="Nama TL" />
-        </div>
-        <div>
-          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">OVERTIME AKTUAL (JAM)</label>
-          <input id="inpOtHours" class="input mono" type="number" step="0.5" min="0" value="0" />
-        </div>
-        <div style="display:flex;align-items:flex-end">
-          <button id="btnOpenNoBody" class="btn btn-purple" style="width:100%;padding:9px 12px" type="button">
-            # Update No Body &amp; Jam Stop
-          </button>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <button id="btnOpenNoBody" class="btn btn-purple" type="button"># No Body &amp; Jam Stop</button>
+          <span id="roleWarn" class="pill pill-purple">Role: ADMIN</span>
         </div>
       </div>
     </section>
 
-    <!-- KPI Summary Cards -->
-    <section class="grid-4">
-      <div class="glass-soft" style="padding:12px 14px">
-        <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Total Plan / Actual</div>
-        <div id="kpiOutput" class="mono" style="font-size:20px;font-weight:900;margin-top:2px">0 / 0</div>
-        <div id="kpiDiff" class="mono" style="font-size:11px;color:var(--muted)">Diff: 0 · Eff: 0%</div>
-      </div>
-      <div class="glass-soft" style="padding:12px 14px">
-        <div style="font-size:10px;color:#d8b4fe;font-weight:700;text-transform:uppercase">No Body (Start → Finish)</div>
-        <div id="kpiBody" class="mono" style="font-size:18px;font-weight:900;color:#e9d5ff;margin-top:2px">- → -</div>
-        <div id="kpiBodyRun" class="mono" style="font-size:11px;color:var(--muted)">Total Body Run: 0 Unit</div>
-      </div>
-      <div class="glass-soft" style="padding:12px 14px">
-        <div style="font-size:10px;color:#fda4af;font-weight:700;text-transform:uppercase">Jam Stop Manual / Sistem</div>
-        <div id="kpiStop" class="mono" style="font-size:18px;font-weight:900;color:#fda4af;margin-top:2px">- WIB</div>
-        <div id="kpiSysStop" class="mono" style="font-size:11px;color:#67e8f9">Sistem: - WIB</div>
-      </div>
-      <div class="glass-soft" style="padding:12px 14px">
-        <div style="font-size:10px;color:#fcd34d;font-weight:700;text-transform:uppercase">Total Delay (INT / EXT)</div>
-        <div id="kpiDelay" class="mono" style="font-size:20px;font-weight:900;color:#fcd34d;margin-top:2px">0 min</div>
-        <div id="kpiDelaySplit" class="mono" style="font-size:11px;color:var(--muted)">INT: 0m · EXT: 0m</div>
-      </div>
-    </section>
+    <!-- LEMBAR KERTAS A4 (IDENTIK DENGAN VERCEL) -->
+    <div class="a4-wrap">
+      <article class="a4-sheet">
+        <!-- SEKSI 1: HEADER LAPORAN -->
+        <div style="border:2px solid #0f172a;margin-bottom:8px">
+          <div style="display:grid;grid-template-columns:1.5fr 1fr;border-bottom:1.5px solid #0f172a">
+            <div style="padding:7px 10px;border-right:1.5px solid #0f172a">
+              <div style="font-size:9px;font-weight:800;color:#475569;letter-spacing:0.06em">PT TOYOTA MOTOR MANUFACTURING INDONESIA · UNDERBODY</div>
+              <div style="font-size:16px;font-weight:900;letter-spacing:0.02em;margin-top:1px">DAILY PRODUCTION REPORT</div>
+              <div style="font-size:9.5px;color:#334155;margin-top:1px">Line: <b id="sheetLine">UB ASSY</b> · Takt Time: <b id="sheetTakt">2.4m</b></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr">
+              <div style="padding:6px 8px;border-right:1px solid #0f172a;display:flex;flex-direction:column;justify-content:center">
+                <div style="font-size:8.5px;font-weight:800;color:#475569">TANGGAL</div>
+                <div id="sheetDate" class="mono" style="font-size:12.5px;font-weight:900">-</div>
+                <div id="sheetSession" style="font-size:9px;font-weight:700;color:#334155">SIANG</div>
+              </div>
+              <div id="sheetShiftBox" style="padding:6px 8px;background:#fef2f2;display:flex;flex-direction:column;justify-content:center;align-items:center">
+                <div style="font-size:8.5px;font-weight:800;color:#991b1b">SHIFT / REGU</div>
+                <div id="sheetShift" style="font-size:16px;font-weight:900;color:#dc2626">RED</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;background:#f8fafc;font-size:9.5px">
+            <div style="padding:4px 8px;border-right:1px solid #cbd5e1"><b>PIC (GL):</b> <input id="inpPic" class="a4-input" style="width:68%;font-weight:700" placeholder="Nama GL" /></div>
+            <div style="padding:4px 8px;border-right:1px solid #cbd5e1"><b>SPV (TL):</b> <input id="inpSpv" class="a4-input" style="width:68%;font-weight:700" placeholder="Nama TL" /></div>
+            <div style="padding:4px 8px;border-right:1px solid #cbd5e1"><b>TARGET CCR:</b> <span id="sheetCcr" class="mono" style="font-weight:900;color:#1d4ed8">0</span> Unit</div>
+            <div style="padding:4px 8px"><b>EFISIENSI:</b> <span id="sheetEff" class="mono" style="font-weight:900;color:#047857">0.0%</span></div>
+          </div>
+        </div>
 
-    <!-- Hourly Production Table -->
-    <section class="glass" style="padding:14px;overflow-x:auto">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-size:13px;font-weight:800">Pencatatan Output Per Jam (Plan vs Actual &amp; Chokotei)</div>
-        <span id="roleWarn" class="pill pill-purple">Role: ADMIN</span>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th style="width:42px">#</th>
-            <th style="width:125px">Jam</th>
-            <th style="width:80px">Plan</th>
-            <th style="width:85px">Actual</th>
-            <th style="width:65px">Diff</th>
-            <th style="width:85px">Delay (m)</th>
-            <th style="width:85px">Kat</th>
-            <th>Problem / Chokotei</th>
-            <th>Countermeasure</th>
-          </tr>
-        </thead>
-        <tbody id="slotsBody"></tbody>
-      </table>
-    </section>
+        <!-- SEKSI 2: TABEL OUTPUT PER JAM -->
+        <div style="margin-bottom:8px">
+          <div class="a4-box-head">
+            <span>1. Pencatatan Output Produksi Per Jam (Plan vs Actual &amp; Chokotei)</span>
+            <span id="sheetTotalsTop" class="mono">Plan: 0 | Act: 0 | Diff: 0</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width:24px">No</th>
+                <th style="width:82px">Jam Kerja</th>
+                <th style="width:38px">Plan</th>
+                <th style="width:42px">Kum P</th>
+                <th style="width:42px">Act</th>
+                <th style="width:42px">Kum A</th>
+                <th style="width:36px">Diff</th>
+                <th style="width:42px">Delay</th>
+                <th style="width:44px">Kat</th>
+                <th>Problem / Chokotei</th>
+                <th>Countermeasure</th>
+              </tr>
+            </thead>
+            <tbody id="slotsBody"></tbody>
+            <tfoot>
+              <tr style="background:#f1f5f9;font-weight:900">
+                <td colspan="2" style="text-align:right">TOTAL</td>
+                <td id="ftPlan" class="a4-num">0</td>
+                <td id="ftKumP" class="a4-num">0</td>
+                <td id="ftAct" class="a4-num" style="color:#047857">0</td>
+                <td id="ftKumA" class="a4-num" style="color:#047857">0</td>
+                <td id="ftDiff" class="a4-num">0</td>
+                <td id="ftDelay" class="a4-num" style="color:#b45309">0m</td>
+                <td colspan="3" id="ftDelaySplit" style="font-size:9.5px;color:#334155">INT: 0m · EXT: 0m</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- SEKSI 3: PRODUKSI MODEL CBU & PART CKD (2 KOTAK SEJAJAR) -->
+        <div class="a4-grid-2" style="margin-bottom:8px">
+          <div style="border:1.5px solid #1e293b">
+            <div class="a4-box-head" style="background:#1e3a8a">
+              <span>2A. Produksi Model CBU</span>
+              <span class="mono">UNIT</span>
+            </div>
+            <table>
+              <tbody id="cbuBody"></tbody>
+              <tfoot>
+                <tr style="background:#dbeafe;font-weight:900">
+                  <td>TOTAL PRODUKSI CBU</td>
+                  <td id="cbuTotal" class="a4-num" style="width:72px;color:#1e3a8a">0</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div style="border:1.5px solid #1e293b">
+            <div class="a4-box-head" style="background:#155e75">
+              <span>2B. Produksi Part CKD (Sub-Assy Export)</span>
+              <span class="mono">QTY</span>
+            </div>
+            <table>
+              <tbody id="ckdBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SEKSI 4: MANPOWER, NO BODY & JAM STOP, TARGET CCR & OVERTIME -->
+        <div class="a4-grid-3">
+          <!-- Kotak 1: MP Absensi -->
+          <div style="border:1.5px solid #1e293b">
+            <div class="a4-box-head" style="background:#334155"><span>3A. MP Absensi</span></div>
+            <table>
+              <tr><td>Total MP</td><td style="width:58px"><input id="mpTotal" class="a4-input a4-num" type="number" min="0" value="19" /></td></tr>
+              <tr><td>Hadir (Act)</td><td><input id="mpHadir" class="a4-input a4-num" type="number" min="0" value="19" style="color:#047857" /></td></tr>
+              <tr><td>Sakit / Izin / Cuti</td><td><input id="mpAbsen" class="a4-input a4-num" type="number" min="0" value="0" style="color:#dc2626" /></td></tr>
+              <tr><td>Catatan MP</td><td><input id="mpNote" class="a4-input" placeholder="-" /></td></tr>
+            </table>
+          </div>
+
+          <!-- Kotak 2: Record No Body & Jam Stop (Klik untuk buka Modal Simple) -->
+          <div id="boxNoBodyCard" class="a4-clickable" style="border:1.5px solid #581c87" title="Klik untuk mengubah No Body & Jam Stop">
+            <div class="a4-box-head" style="background:#581c87">
+              <span>3B. No Body &amp; Jam Stop</span>
+              <span class="no-print" style="font-size:8.5px;color:#e9d5ff">✎ Edit</span>
+            </div>
+            <table>
+              <tr>
+                <td style="width:50%;background:#faf5ff"><div style="font-size:8px;font-weight:800;color:#6b21a8">NO BODY START</div><div id="cellBodyStart" class="mono" style="font-size:12px;font-weight:900">-</div></td>
+                <td style="width:50%;background:#faf5ff"><div style="font-size:8px;font-weight:800;color:#6b21a8">NO BODY FINISH</div><div id="cellBodyFinish" class="mono" style="font-size:12px;font-weight:900;color:#7e22ce">-</div></td>
+              </tr>
+              <tr>
+                <td style="background:#eef2ff"><div style="font-size:8px;font-weight:800;color:#3730a3">TOTAL RUN</div><div id="cellBodyRun" class="mono" style="font-size:12px;font-weight:900">0 Unit</div></td>
+                <td style="background:#fff1f2"><div style="font-size:8px;font-weight:800;color:#be123c">JAM STOP (MANUAL)</div><div id="cellJamStop" class="mono" style="font-size:12px;font-weight:900;color:#be123c">- WIB</div></td>
+              </tr>
+              <tr>
+                <td colspan="2" style="background:#ecfeff;font-size:9px"><b>Waktu Sistem:</b> <span id="cellSysStop" class="mono" style="font-weight:800;color:#0e7490">- WIB</span></td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Kotak 3: Target CCR, Overtime & Efisiensi -->
+          <div style="border:1.5px solid #1e293b">
+            <div class="a4-box-head" style="background:#065f46"><span>3C. CCR &amp; Overtime</span></div>
+            <table>
+              <tr><td>Target CCR</td><td id="cellCcrPlan" class="a4-num" style="width:68px">0</td></tr>
+              <tr><td>Actual Output</td><td id="cellCcrAct" class="a4-num" style="color:#047857">0</td></tr>
+              <tr><td>Diff vs CCR</td><td id="cellCcrDiff" class="a4-num">0</td></tr>
+              <tr><td>Overtime</td><td id="cellOt" class="a4-num" style="color:#b45309">0h (0u)</td></tr>
+              <tr><td>Line Stop</td><td id="cellDelaySum" class="a4-num" style="color:#dc2626">0 min</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- TANDA TANGAN PENGESAHAN -->
+        <div class="a4-sign">
+          <div class="a4-sign-box">
+            <div class="a4-sign-head">Prepared By (TL / SPV)</div>
+            <div id="signSpv" class="a4-sign-body">-</div>
+          </div>
+          <div class="a4-sign-box">
+            <div class="a4-sign-head">Checked By (GL / PIC)</div>
+            <div id="signPic" class="a4-sign-body">-</div>
+          </div>
+          <div class="a4-sign-box">
+            <div class="a4-sign-head">Approved By (Section Head)</div>
+            <div class="a4-sign-body">Section Head UB</div>
+          </div>
+        </div>
+      </article>
+    </div>
   </main>
 
-  <!-- MODAL: UPDATE NO BODY & JAM STOP (Versi Simple Identik dengan UBnetwork terbaru) -->
+  <!-- MODAL: UPDATE NO BODY & JAM STOP (Versi Simple Identik dengan Vercel) -->
   <div id="noBodyModal" class="modal-backdrop">
     <div class="modal-card" style="display:grid;gap:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:10px">
@@ -132,7 +330,6 @@
         </div>
       </div>
 
-      <!-- Seksi 1: No Body Start & Finish -->
       <div class="glass-soft" style="padding:12px;border-color:rgba(168,85,247,0.35);display:grid;gap:10px">
         <div style="font-size:12px;font-weight:800;color:#d8b4fe">Nomor Seri Bodi (Start &amp; Finish)</div>
         <div class="grid-2">
@@ -161,7 +358,6 @@
         </div>
       </div>
 
-      <!-- Seksi 2: Waktu Sistem + Salin ↓ & Jam Stop Manual Besar -->
       <div class="glass-soft" style="padding:12px;border-color:rgba(244,63,94,0.35);display:grid;gap:12px">
         <div style="background:rgba(8,51,68,0.5);border:1px solid rgba(6,182,212,0.45);border-radius:12px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
           <span style="font-size:12px;font-weight:800;color:#67e8f9">Waktu Sistem</span>
@@ -170,7 +366,6 @@
             <button id="btnCopySys" class="btn btn-cyan" type="button" style="padding:5px 10px;font-size:11.5px">Salin ↓</button>
           </div>
         </div>
-
         <div>
           <label style="font-size:12px;color:#fda4af;font-weight:800;display:block;margin-bottom:6px">Jam Stop Manual</label>
           <div style="display:flex;align-items:center;background:#020617;border:2px solid rgba(244,63,94,0.45);border-radius:14px;padding:8px 14px">
@@ -187,6 +382,17 @@
   <script src="assets/db.js"></script>
   <script>
     (function () {
+      var DEFAULT_CBU = [
+        { code: 'zenix', name: 'ZENIX (HEV/GAS)', qty: 0 },
+        { code: 'fortuner', name: 'FORTUNER (SUV)', qty: 0 },
+        { code: 'innova', name: 'INNOVA (KIJANG)', qty: 0 }
+      ];
+      var DEFAULT_CKD = [
+        { part_no: 'CKD-1', part_name: 'FRONT FLOOR', qty: 0 },
+        { part_no: 'CKD-2', part_name: 'REAR FLOOR', qty: 0 },
+        { part_no: 'CKD-3', part_name: 'DASH PANEL', qty: 0 }
+      ];
+
       var cfg = null;
       var curReport = null;
       var finishManual = false;
@@ -200,6 +406,10 @@
       var inpPic = document.getElementById('inpPic');
       var inpSpv = document.getElementById('inpSpv');
       var inpOtHours = document.getElementById('inpOtHours');
+      var mpTotal = document.getElementById('mpTotal');
+      var mpHadir = document.getElementById('mpHadir');
+      var mpAbsen = document.getElementById('mpAbsen');
+      var mpNote = document.getElementById('mpNote');
       var slotsBody = document.getElementById('slotsBody');
 
       function computeSysFinish(slots, takt) {
@@ -212,9 +422,7 @@
         var mins = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
         var units = (last.act !== '' && last.act !== null) ? Number(last.act) : Number(last.plan || 0);
         var totalMins = (mins + Math.round(units * (takt || 2.4))) % 1440;
-        var hh = String(Math.floor(totalMins / 60)).padStart(2, '0');
-        var mm = String(totalMins % 60).padStart(2, '0');
-        return hh + ':' + mm;
+        return String(Math.floor(totalMins / 60)).padStart(2, '0') + ':' + String(totalMins % 60).padStart(2, '0');
       }
 
       function computeStats() {
@@ -231,29 +439,62 @@
         var fNum = parseInt(String(curReport.noBodyFinish || '').replace(/\D/g, ''), 10);
         var bodyRun = (!isNaN(sNum) && !isNaN(fNum) && fNum >= sNum) ? (fNum - sNum + 1) : 0;
         var sysFin = computeSysFinish(curReport.slots, curReport.taktTime);
+        var ccr = Number(curReport.ccrPlan || 0);
+        var ccrDiff = totalAct - (ccr || totalPlan);
 
-        document.getElementById('kpiOutput').textContent = totalPlan + ' / ' + totalAct;
-        document.getElementById('kpiDiff').textContent = 'Diff: ' + (diff >= 0 ? '+' : '') + diff + ' · Eff: ' + eff + '%';
-        document.getElementById('kpiBody').textContent = (curReport.noBodyStart || '-') + ' → ' + (curReport.noBodyFinish || '-');
-        document.getElementById('kpiBodyRun').textContent = 'Total Body Run: ' + bodyRun + ' Unit';
-        document.getElementById('kpiStop').textContent = (curReport.jamStopProduksi || '-') + ' WIB';
-        document.getElementById('kpiSysStop').textContent = 'Sistem: ' + sysFin + ' WIB';
-        document.getElementById('kpiDelay').textContent = (intD + extD) + ' min';
-        document.getElementById('kpiDelaySplit').textContent = 'INT: ' + intD + 'm · EXT: ' + extD + 'm';
+        document.getElementById('sheetLine').textContent = curReport.lineName || 'UB ASSY';
+        document.getElementById('sheetTakt').textContent = (curReport.taktTime || 2.4) + 'm';
+        document.getElementById('sheetDate').textContent = curReport.tanggal;
+        document.getElementById('sheetSession').textContent = curReport.session === 'night' ? 'MALAM' : 'SIANG';
+        document.getElementById('sheetShift').textContent = curReport.shift;
+        var sb = document.getElementById('sheetShiftBox');
+        sb.style.background = curReport.shift === 'RED' ? '#fef2f2' : '#f1f5f9';
+        document.getElementById('sheetShift').style.color = curReport.shift === 'RED' ? '#dc2626' : '#0f172a';
+        document.getElementById('sheetCcr').textContent = ccr;
+        document.getElementById('sheetEff').textContent = eff + '%';
+        document.getElementById('sheetTotalsTop').textContent = 'Plan: ' + totalPlan + ' | Act: ' + totalAct + ' | Diff: ' + (diff >= 0 ? '+' : '') + diff;
+
+        document.getElementById('ftPlan').textContent = totalPlan;
+        document.getElementById('ftKumP').textContent = totalPlan;
+        document.getElementById('ftAct').textContent = totalAct;
+        document.getElementById('ftKumA').textContent = totalAct;
+        document.getElementById('ftDiff').textContent = (diff >= 0 ? '+' : '') + diff;
+        document.getElementById('ftDiff').style.color = diff < 0 ? '#dc2626' : '#047857';
+        document.getElementById('ftDelay').textContent = (intD + extD) + 'm';
+        document.getElementById('ftDelaySplit').textContent = 'INT: ' + intD + 'm · EXT: ' + extD + 'm';
+
+        document.getElementById('cellBodyStart').textContent = curReport.noBodyStart ? ('#' + curReport.noBodyStart) : '-';
+        document.getElementById('cellBodyFinish').textContent = curReport.noBodyFinish ? ('#' + curReport.noBodyFinish) : '-';
+        document.getElementById('cellBodyRun').textContent = bodyRun + ' Unit';
+        document.getElementById('cellJamStop').textContent = (curReport.jamStopProduksi || '-') + ' WIB';
+        document.getElementById('cellSysStop').textContent = sysFin + ' WIB';
+
+        document.getElementById('cellCcrPlan').textContent = ccr;
+        document.getElementById('cellCcrAct').textContent = totalAct;
+        document.getElementById('cellCcrDiff').textContent = (ccrDiff >= 0 ? '+' : '') + ccrDiff;
+        document.getElementById('cellCcrDiff').style.color = ccrDiff < 0 ? '#dc2626' : '#047857';
+        document.getElementById('cellOt').textContent = (curReport.actOtHours || 0) + 'h (' + (curReport.actOtUnits || 0) + 'u)';
+        document.getElementById('cellDelaySum').textContent = (intD + extD) + ' min';
+
+        document.getElementById('signPic').textContent = curReport.picName || '-';
+        document.getElementById('signSpv').textContent = curReport.spvName || '-';
 
         document.getElementById('mBodyRun').textContent = bodyRun + ' Unit';
         document.getElementById('mTotalAct').textContent = totalAct + ' Unit';
         document.getElementById('mSysTime').textContent = sysFin + ' WIB';
+
+        var cbuSum = (curReport.cbuModels || []).reduce(function (a, b) { return a + Number(b.qty || 0); }, 0);
+        document.getElementById('cbuTotal').textContent = cbuSum;
 
         var pill = document.getElementById('syncStatusPill');
         if (curReport.syncStatus === 'synced') {
           pill.textContent = '✓ Tersinkron ke Server';
           pill.className = 'pill pill-emerald';
         } else if (curReport.syncStatus === 'failed') {
-          pill.textContent = '⚠ Gagal Sync (Tersimpan Lokal)';
+          pill.textContent = '⚠ Gagal Sync (Lokal Aman)';
           pill.className = 'pill pill-rose';
         } else {
-          pill.textContent = '● Draft Lokal (Belum Sync)';
+          pill.textContent = '● Draft Lokal';
           pill.className = 'pill pill-amber';
         }
       }
@@ -269,48 +510,90 @@
         curReport.spvName = inpSpv.value.trim();
         curReport.actOtHours = parseFloat(inpOtHours.value) || 0;
         curReport.actOtUnits = Math.round(curReport.actOtHours * 32);
+        curReport.mp = {
+          total: parseInt(mpTotal.value, 10) || 0,
+          hadir: parseInt(mpHadir.value, 10) || 0,
+          absen: parseInt(mpAbsen.value, 10) || 0,
+          note: mpNote.value.trim()
+        };
         if (curReport.syncStatus === 'synced') curReport.syncStatus = 'draft';
         return UBL.saveReport(curReport).then(function () {
           computeStats();
-          if (!silent) UBL.toast('Tersimpan di database lokal (IndexedDB).');
+          if (!silent) UBL.toast('Checksheet A4 tersimpan di IndexedDB lokal.');
+        });
+      }
+
+      function renderCbuCkd(editable) {
+        var cbuBody = document.getElementById('cbuBody');
+        cbuBody.innerHTML = '';
+        (curReport.cbuModels || []).forEach(function (m, i) {
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td><b>' + m.name + '</b></td><td style="width:72px"><input data-i="' + i + '" class="a4-input a4-num cbu-q" type="number" min="0" value="' + (m.qty || 0) + '"' + (editable ? '' : ' disabled') + ' /></td>';
+          cbuBody.appendChild(tr);
+        });
+        cbuBody.querySelectorAll('.cbu-q').forEach(function (el) {
+          el.onchange = function () {
+            curReport.cbuModels[parseInt(el.getAttribute('data-i'), 10)].qty = parseInt(el.value, 10) || 0;
+            persistLocal(true);
+          };
+        });
+
+        var ckdBody = document.getElementById('ckdBody');
+        ckdBody.innerHTML = '';
+        (curReport.ckdParts || []).forEach(function (p, i) {
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td>' + p.part_name + '</td><td style="width:72px"><input data-i="' + i + '" class="a4-input a4-num ckd-q" type="number" min="0" value="' + (p.qty || 0) + '"' + (editable ? '' : ' disabled') + ' /></td>';
+          ckdBody.appendChild(tr);
+        });
+        ckdBody.querySelectorAll('.ckd-q').forEach(function (el) {
+          el.onchange = function () {
+            curReport.ckdParts[parseInt(el.getAttribute('data-i'), 10)].qty = parseInt(el.value, 10) || 0;
+            persistLocal(true);
+          };
         });
       }
 
       function renderSlots() {
         var editable = UBL.canEditShift(cfg.role, curReport.shift);
         var rw = document.getElementById('roleWarn');
-        rw.textContent = editable ? ('Role: ' + cfg.role + ' (Edit Aktif)') : ('Role: ' + cfg.role + ' (Read-Only untuk Shift ' + curReport.shift + ')');
+        rw.textContent = editable ? ('Role: ' + cfg.role + ' (Edit)') : ('Role: ' + cfg.role + ' (Read-Only)');
         rw.className = 'pill ' + (editable ? 'pill-emerald' : 'pill-rose');
 
         slotsBody.innerHTML = '';
+        var kumP = 0, kumA = 0;
         (curReport.slots || []).forEach(function (sl, idx) {
+          kumP += Number(sl.plan || 0);
+          var hasAct = sl.act !== '' && sl.act !== null && sl.act !== undefined;
+          if (hasAct) kumA += Number(sl.act || 0);
+          var diff = hasAct ? (Number(sl.act) - Number(sl.plan || 0)) : '-';
           var tr = document.createElement('tr');
-          var actVal = sl.act === null || sl.act === undefined ? '' : sl.act;
-          var diff = actVal === '' ? '-' : (Number(actVal) - Number(sl.plan || 0));
+          if (sl.isOvertime) tr.style.background = '#fffbeb';
           tr.innerHTML =
-            '<td class="mono" style="font-weight:800">' + sl.no + (sl.isOvertime ? ' <span style="color:#fcd34d;font-size:10px">OT</span>' : '') + '</td>' +
-            '<td class="mono" style="font-size:11.5px;color:#cbd5e1">' + sl.timeRange + '</td>' +
-            '<td><input data-f="plan" data-i="' + idx + '" class="input mono" type="number" style="padding:5px 7px" value="' + (sl.plan || 0) + '"' + (editable ? '' : ' disabled') + ' /></td>' +
-            '<td><input data-f="act" data-i="' + idx + '" class="input mono" type="number" style="padding:5px 7px;color:#6ee7b7;font-weight:800" value="' + actVal + '" placeholder="-"' + (editable ? '' : ' disabled') + ' /></td>' +
-            '<td class="mono" style="font-weight:800;color:' + (diff < 0 ? '#fda4af' : '#6ee7b7') + '">' + diff + '</td>' +
-            '<td><input data-f="delayMin" data-i="' + idx + '" class="input mono" type="number" style="padding:5px 7px" value="' + (sl.delayMin || 0) + '"' + (editable ? '' : ' disabled') + ' /></td>' +
-            '<td><select data-f="category" data-i="' + idx + '" class="select" style="padding:5px 6px"' + (editable ? '' : ' disabled') + '><option value="INT"' + (sl.category !== 'EXT' ? ' selected' : '') + '>INT</option><option value="EXT"' + (sl.category === 'EXT' ? ' selected' : '') + '>EXT</option></select></td>' +
-            '<td><input data-f="problem" data-i="' + idx + '" class="input" style="padding:5px 7px" value="' + String(sl.problem || '').replace(/"/g, '&quot;') + '" placeholder="Problem..."' + (editable ? '' : ' disabled') + ' /></td>' +
-            '<td><input data-f="countermeasure" data-i="' + idx + '" class="input" style="padding:5px 7px" value="' + String(sl.countermeasure || '').replace(/"/g, '&quot;') + '" placeholder="Perbaikan..."' + (editable ? '' : ' disabled') + ' /></td>';
+            '<td class="a4-num">' + sl.no + '</td>' +
+            '<td class="mono" style="text-align:center;font-size:9.5px">' + sl.timeRange + '</td>' +
+            '<td><input data-f="plan" data-i="' + idx + '" class="a4-input a4-num" type="number" value="' + (sl.plan || 0) + '"' + (editable ? '' : ' disabled') + ' /></td>' +
+            '<td class="a4-num" style="background:#f8fafc;color:#475569">' + kumP + '</td>' +
+            '<td><input data-f="act" data-i="' + idx + '" class="a4-input a4-num" style="color:#047857" type="number" value="' + (hasAct ? sl.act : '') + '" placeholder="-"' + (editable ? '' : ' disabled') + ' /></td>' +
+            '<td class="a4-num" style="background:#f0fdf4;color:#047857">' + (hasAct ? kumA : '-') + '</td>' +
+            '<td class="a4-num" style="color:' + (diff !== '-' && diff < 0 ? '#dc2626' : '#047857') + '">' + diff + '</td>' +
+            '<td><input data-f="delayMin" data-i="' + idx + '" class="a4-input a4-num" type="number" value="' + (sl.delayMin || 0) + '"' + (editable ? '' : ' disabled') + ' /></td>' +
+            '<td><select data-f="category" data-i="' + idx + '" class="a4-input" style="font-size:9.5px;font-weight:700"' + (editable ? '' : ' disabled') + '><option value="INT"' + (sl.category !== 'EXT' ? ' selected' : '') + '>INT</option><option value="EXT"' + (sl.category === 'EXT' ? ' selected' : '') + '>EXT</option></select></td>' +
+            '<td><input data-f="problem" data-i="' + idx + '" class="a4-input" value="' + String(sl.problem || '').replace(/"/g, '&quot;') + '" placeholder="-"' + (editable ? '' : ' disabled') + ' /></td>' +
+            '<td><input data-f="countermeasure" data-i="' + idx + '" class="a4-input" value="' + String(sl.countermeasure || '').replace(/"/g, '&quot;') + '" placeholder="-"' + (editable ? '' : ' disabled') + ' /></td>';
           slotsBody.appendChild(tr);
         });
 
         slotsBody.querySelectorAll('input, select').forEach(function (el) {
-          el.addEventListener('change', function () {
+          el.onchange = function () {
             var i = parseInt(el.getAttribute('data-i'), 10);
             var f = el.getAttribute('data-f');
-            var val = el.value;
-            if (f === 'plan' || f === 'delayMin') curReport.slots[i][f] = parseInt(val, 10) || 0;
-            else if (f === 'act') curReport.slots[i].act = val === '' ? '' : (parseInt(val, 10) || 0);
-            else curReport.slots[i][f] = val;
+            if (f === 'plan' || f === 'delayMin') curReport.slots[i][f] = parseInt(el.value, 10) || 0;
+            else if (f === 'act') curReport.slots[i].act = el.value === '' ? '' : (parseInt(el.value, 10) || 0);
+            else curReport.slots[i][f] = el.value;
             persistLocal(true).then(renderSlots);
-          });
+          };
         });
+        renderCbuCkd(editable);
         computeStats();
       }
 
@@ -323,9 +606,10 @@
         Promise.all([UBL.getReport(id), UBL.findLatestPrevFinish(dt, sh, ses === 'night')]).then(function (res) {
           var existing = res[0];
           prevCarry = res[1];
-
           if (existing) {
             curReport = existing;
+            if (!Array.isArray(curReport.cbuModels) || !curReport.cbuModels.length) curReport.cbuModels = JSON.parse(JSON.stringify(DEFAULT_CBU));
+            if (!Array.isArray(curReport.ckdParts) || !curReport.ckdParts.length) curReport.ckdParts = JSON.parse(JSON.stringify(DEFAULT_CKD));
             inpSession.value = curReport.session || 'day';
             finishManual = Boolean(curReport.noBodyFinish);
           } else {
@@ -336,22 +620,12 @@
               return { no: s.no, timeRange: s.timeRange, plan: s.plan, act: '', delayMin: 0, category: 'INT', problem: '', countermeasure: '', isOvertime: s.isOvertime };
             });
             curReport = {
-              id: id,
-              tanggal: dt,
-              shift: sh,
-              session: ses,
-              lineName: cfg.lineName,
-              taktTime: cfg.taktTime,
-              ccrPlan: defCcr,
-              picName: sh === 'RED' ? cfg.picRed : cfg.picWhite,
-              spvName: sh === 'RED' ? cfg.spvRed : cfg.spvWhite,
-              noBodyStart: autoStart,
-              noBodyFinish: autoFinish,
-              jamStopProduksi: '',
-              actOtHours: 0,
-              actOtUnits: 0,
-              slots: baseSlots,
-              syncStatus: 'draft'
+              id: id, tanggal: dt, shift: sh, session: ses, lineName: cfg.lineName, taktTime: cfg.taktTime,
+              ccrPlan: defCcr, picName: sh === 'RED' ? cfg.picRed : cfg.picWhite, spvName: sh === 'RED' ? cfg.spvRed : cfg.spvWhite,
+              noBodyStart: autoStart, noBodyFinish: autoFinish, jamStopProduksi: '', actOtHours: 0, actOtUnits: 0,
+              cbuModels: JSON.parse(JSON.stringify(DEFAULT_CBU)), ckdParts: JSON.parse(JSON.stringify(DEFAULT_CKD)),
+              mp: { total: 19, hadir: 19, absen: 0, note: '' },
+              slots: baseSlots, syncStatus: 'draft'
             };
             finishManual = false;
           }
@@ -360,6 +634,10 @@
           inpPic.value = curReport.picName || '';
           inpSpv.value = curReport.spvName || '';
           inpOtHours.value = curReport.actOtHours || 0;
+          mpTotal.value = (curReport.mp && curReport.mp.total) || 19;
+          mpHadir.value = (curReport.mp && curReport.mp.hadir) || 19;
+          mpAbsen.value = (curReport.mp && curReport.mp.absen) || 0;
+          mpNote.value = (curReport.mp && curReport.mp.note) || '';
           renderSlots();
         });
       }
@@ -371,7 +649,7 @@
       var mJamStop = document.getElementById('mJamStop');
       var btnPrevCarry = document.getElementById('btnPrevCarry');
 
-      document.getElementById('btnOpenNoBody').onclick = function () {
+      function openNoBodyModal() {
         mBodyStart.value = curReport.noBodyStart || '';
         mBodyFinish.value = curReport.noBodyFinish || '';
         mJamStop.value = curReport.jamStopProduksi || '';
@@ -384,47 +662,34 @@
         document.getElementById('btnAutoCcr').textContent = 'Auto Finish (CCR ' + (parseInt(inpCcr.value, 10) || 0) + ')';
         computeStats();
         nbModal.classList.add('open');
-      };
+      }
+
+      document.getElementById('btnOpenNoBody').onclick = openNoBodyModal;
+      document.getElementById('boxNoBodyCard').onclick = openNoBodyModal;
 
       mBodyStart.oninput = function () {
         curReport.noBodyStart = mBodyStart.value.trim();
         var ccr = parseInt(inpCcr.value, 10) || 0;
         if (!finishManual && ccr > 0) {
           var autoF = UBL.addNumberPreservePad(curReport.noBodyStart, ccr - 1);
-          if (autoF) {
-            curReport.noBodyFinish = autoF;
-            mBodyFinish.value = autoF;
-          }
+          if (autoF) { curReport.noBodyFinish = autoF; mBodyFinish.value = autoF; }
         }
         computeStats();
       };
-      mBodyFinish.oninput = function () {
-        curReport.noBodyFinish = mBodyFinish.value.trim();
-        finishManual = true;
-        computeStats();
-      };
+      mBodyFinish.oninput = function () { curReport.noBodyFinish = mBodyFinish.value.trim(); finishManual = true; computeStats(); };
       btnPrevCarry.onclick = function () {
         if (!prevCarry) return;
         var nextS = UBL.addNumberPreservePad(prevCarry.finish, 1);
-        mBodyStart.value = nextS;
-        curReport.noBodyStart = nextS;
+        mBodyStart.value = nextS; curReport.noBodyStart = nextS;
         var ccr = parseInt(inpCcr.value, 10) || 0;
-        if (ccr > 0) {
-          var nextF = UBL.addNumberPreservePad(nextS, ccr - 1);
-          mBodyFinish.value = nextF;
-          curReport.noBodyFinish = nextF;
-          finishManual = false;
-        }
+        if (ccr > 0) { var nextF = UBL.addNumberPreservePad(nextS, ccr - 1); mBodyFinish.value = nextF; curReport.noBodyFinish = nextF; finishManual = false; }
         computeStats();
       };
       document.getElementById('btnAutoCcr').onclick = function () {
-        var ccr = parseInt(inpCcr.value, 10) || 0;
-        finishManual = false;
+        var ccr = parseInt(inpCcr.value, 10) || 0; finishManual = false;
         if (mBodyStart.value.replace(/\D/g, '') && ccr > 0) {
           var nextF = UBL.addNumberPreservePad(mBodyStart.value, ccr - 1);
-          mBodyFinish.value = nextF;
-          curReport.noBodyFinish = nextF;
-          computeStats();
+          mBodyFinish.value = nextF; curReport.noBodyFinish = nextF; computeStats();
         }
       };
       document.getElementById('btnCopySys').onclick = function () {
@@ -443,6 +708,7 @@
       document.getElementById('btnModalSaveBottom').onclick = saveModalNoBody;
       document.getElementById('btnModalClose').onclick = function () { nbModal.classList.remove('open'); };
 
+      document.getElementById('btnPrintA4').onclick = function () { window.print(); };
       document.getElementById('btnSaveLocal').onclick = function () { persistLocal(false); };
       document.getElementById('btnSyncServer').onclick = function () {
         if (!UBL.canEditShift(cfg.role, curReport.shift)) {
@@ -451,29 +717,23 @@
         }
         var btn = document.getElementById('btnSyncServer');
         btn.disabled = true;
-        btn.textContent = '⏳ Mengirim ke Server...';
+        btn.textContent = '⏳ Mengirim...';
         persistLocal(true).then(function () {
           return UBL.syncOneReportToServer(curReport);
         }).then(function (out) {
           computeStats();
-          if (out.ok) {
-            UBL.toast('Berhasil sync ke server! Data siap dilihat di HP / ubnetwork.');
-          } else {
-            var msg = (out.results || []).map(function (x) { return x.target + ': ' + (x.message || x.status); }).join(' | ');
-            UBL.toast('Gagal sync (' + msg + '). Data tetap aman di lokal.');
-          }
+          if (out.ok) UBL.toast('Berhasil sync ke server! Data siap dilihat di HP / ubnetwork.');
+          else UBL.toast('Gagal sync ke server. Data tetap aman di lokal.');
         }).finally(function () {
           btn.disabled = false;
           btn.textContent = '☁ Kirim ke Server (1x Sync)';
         });
       };
 
-      [inpCcr, inpPic, inpSpv, inpOtHours].forEach(function (el) {
-        el.addEventListener('change', function () { persistLocal(true); });
+      [inpCcr, inpPic, inpSpv, inpOtHours, mpTotal, mpHadir, mpAbsen, mpNote].forEach(function (el) {
+        el.onchange = function () { persistLocal(true); };
       });
-      [inpDate, inpShift, inpSession].forEach(function (el) {
-        el.addEventListener('change', loadCurrent);
-      });
+      [inpDate, inpShift, inpSession].forEach(function (el) { el.onchange = loadCurrent; });
 
       UBL.getSettings().then(function (s) {
         cfg = s;
