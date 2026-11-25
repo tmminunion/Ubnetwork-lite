@@ -4,63 +4,79 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Daily Activity &amp; Sync Center | UBnetwork Lite</title>
-  <link rel="stylesheet" href="assets/app.css" />
+  <link rel="stylesheet" href="assets/macos.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <a href="productivity.html" class="btn">← Productivity Hub</a>
-        <div>
-          <div class="brand-title">Daily Activity &amp; Sync Center</div>
-          <div class="brand-sub">Rekap Laporan Lokal (IndexedDB) · Batch 1-Klik Sync &amp; Backup JSON</div>
+  <main class="desktop-main">
+    <section class="mac-window">
+      <div class="mac-titlebar">
+        <div class="mac-title-left">
+          <div class="tl-dots">
+            <a href="productivity.html" class="tl-dot tl-red" title="Kembali ke Productivity Hub"></a>
+            <span class="tl-dot tl-yellow"></span>
+            <span class="tl-dot tl-green"></span>
+          </div>
+          <a href="productivity.html" class="btn" style="padding:4px 10px;font-size:11px">← Productivity</a>
+          <div>
+            <div class="mac-win-title">☁️ Daily Activity &amp; Sync Center</div>
+            <div class="mac-win-sub">Rekap Laporan Lokal IndexedDB · Batch 1-Klik Sync &amp; Backup JSON</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="btnExport" class="btn" type="button">⬇ Backup JSON</button>
+          <label class="btn" style="cursor:pointer">
+            ⬆ Restore JSON
+            <input id="inpImport" type="file" accept=".json" style="display:none" />
+          </label>
+          <button id="btnSyncAll" class="btn btn-emerald" type="button">☁ Sync Semua Draft (1 Klik)</button>
         </div>
       </div>
-      <div class="nav-right">
-        <button id="btnExport" class="btn" type="button">⬇ Backup JSON</button>
-        <label class="btn" style="cursor:pointer">
-          ⬆ Restore JSON
-          <input id="inpImport" type="file" accept=".json" style="display:none" />
-        </label>
-        <button id="btnSyncAll" class="btn btn-emerald" type="button">☁ Sync Semua Draft (1 Klik)</button>
-      </div>
-    </div>
-  </header>
 
-  <main class="container" style="display:grid;gap:14px">
-    <section class="glass" style="padding:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" data-filter="all" type="button">Semua</button>
-        <button class="btn" data-filter="draft" type="button">Belum Sync</button>
-        <button class="btn" data-filter="synced" type="button">Sudah Sync</button>
-      </div>
-      <span id="roleInfo" class="pill pill-purple">Role: -</span>
-    </section>
+      <div class="mac-win-body" style="display:grid;gap:14px">
+        <div class="glass-soft" style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-cyan" data-filter="all" type="button">Semua</button>
+            <button class="btn" data-filter="draft" type="button">Belum Sync</button>
+            <button class="btn" data-filter="synced" type="button">Sudah Sync</button>
+          </div>
+          <span id="roleInfo" class="pill pill-purple">Role: -</span>
+        </div>
 
-    <section class="glass" style="padding:14px;overflow-x:auto">
-      <table>
-        <thead>
-          <tr>
-            <th>Tanggal</th>
-            <th>Shift</th>
-            <th>Plan / Actual</th>
-            <th>No Body (Start → Finish)</th>
-            <th>Jam Stop</th>
-            <th>Status Sync</th>
-            <th style="text-align:right">Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="dailyBody"></tbody>
-      </table>
+        <div class="glass-soft" style="padding:12px;overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Shift</th>
+                <th>Plan / Actual</th>
+                <th>No Body (Start → Finish)</th>
+                <th>Jam Stop</th>
+                <th>Status Sync</th>
+                <th style="text-align:right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="dailyBody"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
   </main>
 
   <script src="assets/db.js"></script>
+  <script src="assets/macos.js"></script>
   <script>
     (function () {
       var filter = 'all';
       var cfg = null;
       var body = document.getElementById('dailyBody');
+      var mac = MacOS.injectChrome({
+        title: 'Daily & Sync Center',
+        onRoleChanged: function (newRole) {
+          if (cfg) cfg.role = newRole;
+          document.getElementById('roleInfo').textContent = 'Role: ' + newRole;
+          render();
+        }
+      });
 
       function render() {
         UBL.listReports().then(function (rows) {
@@ -107,6 +123,7 @@
                 if (!rep) return;
                 return UBL.syncOneReportToServer(rep).then(function (out) {
                   UBL.toast(out.ok ? ('Sync ' + rep.tanggal + ' (' + rep.shift + ') berhasil!') : 'Sync gagal, data tetap aman di lokal.');
+                  mac.refreshStatus();
                   render();
                 });
               });
@@ -119,6 +136,7 @@
               if (!confirm('Hapus laporan lokal ' + id + '?')) return;
               UBL.deleteReport(id).then(function () {
                 UBL.toast('Laporan lokal dihapus.');
+                mac.refreshStatus();
                 render();
               });
             };
@@ -128,6 +146,8 @@
 
       document.querySelectorAll('[data-filter]').forEach(function (btn) {
         btn.onclick = function () {
+          document.querySelectorAll('[data-filter]').forEach(function (x) { x.classList.remove('btn-cyan'); });
+          btn.classList.add('btn-cyan');
           filter = btn.getAttribute('data-filter');
           render();
         };
@@ -150,6 +170,7 @@
             });
           }, Promise.resolve()).then(function () {
             UBL.toast('Selesai sync: ' + okCount + '/' + drafts.length + ' laporan terkirim.');
+            mac.refreshStatus();
             render();
           });
         }).finally(function () {
@@ -177,6 +198,7 @@
           try {
             UBL.importBackupJson(String(reader.result || '')).then(function (count) {
               UBL.toast('Berhasil restore ' + count + ' laporan ke database lokal.');
+              mac.refreshStatus();
               render();
             });
           } catch (e) {

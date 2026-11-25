@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Safety Hub (Zero Accident) | UBnetwork Lite</title>
+  <link rel="stylesheet" href="assets/macos.css" />
+</head>
+<body>
+  <main class="desktop-main">
+    <section class="mac-window">
+      <div class="mac-titlebar">
+        <div class="mac-title-left">
+          <div class="tl-dots">
+            <a href="index.html" class="tl-dot tl-red" title="Kembali ke Beranda"></a>
+            <span class="tl-dot tl-yellow"></span>
+            <span class="tl-dot tl-green"></span>
+          </div>
+          <a href="index.html" class="btn" style="padding:4px 10px;font-size:11px">← Beranda</a>
+          <div class="icon-box g-rose" style="width:30px;height:30px;border-radius:9px;font-size:14px">S</div>
+          <div>
+            <div class="mac-win-title">Safety Hub · Zero Accident</div>
+            <div class="mac-win-sub">Catatan Hiyari Hatto, KYT &amp; Temuan Safety Lokal</div>
+          </div>
+        </div>
+        <button id="btnAddSafety" class="btn btn-emerald" type="button">+ Catat Temuan / Hiyari Hatto</button>
+      </div>
+      <div class="mac-win-body" style="display:grid;gap:14px">
+        <div class="grid-3">
+          <div class="glass-soft" style="padding:12px 14px"><div style="font-size:10px;color:var(--muted);font-weight:800">TOTAL TEMUAN LOKAL</div><div id="sTotal" class="mono" style="font-size:22px;font-weight:900;margin-top:3px">0</div></div>
+          <div class="glass-soft" style="padding:12px 14px"><div style="font-size:10px;color:#fda4af;font-weight:800">OPEN</div><div id="sOpen" class="mono" style="font-size:22px;font-weight:900;color:#fda4af;margin-top:3px">0</div></div>
+          <div class="glass-soft" style="padding:12px 14px"><div style="font-size:10px;color:#6ee7b7;font-weight:800">CLOSED</div><div id="sClosed" class="mono" style="font-size:22px;font-weight:900;color:#6ee7b7;margin-top:3px">0</div></div>
+        </div>
+        <div id="safetyList" class="grid-2"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="safetyModal" class="modal-backdrop">
+    <div class="modal-card" style="display:grid;gap:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0;font-size:15px;font-weight:800">Catat Temuan Safety / Hiyari Hatto</h3>
+        <button id="closeSaf" class="btn" type="button" style="padding:4px 9px">✕</button>
+      </div>
+      <div class="grid-2">
+        <input id="sfArea" class="input" placeholder="Area / Station" />
+        <input id="sfPic" class="input" placeholder="Pelapor / PIC" />
+      </div>
+      <textarea id="sfDesc" class="textarea" rows="3" placeholder="Uraian potensi bahaya / Hiyari Hatto..."></textarea>
+      <textarea id="sfAction" class="textarea" rows="2" placeholder="Tindakan perbaikan..."></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button id="cancelSaf" class="btn" type="button">Batal</button>
+        <button id="saveSaf" class="btn btn-emerald" type="button">Simpan Lokal</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/db.js"></script>
+  <script src="assets/macos.js"></script>
+  <script>
+    (function () {
+      MacOS.injectChrome({ title: 'Safety Hub' });
+      var KEY = 'ub_lite_safety_v1';
+      var modal = document.getElementById('safetyModal');
+      function load() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; } }
+      function save(arr) { localStorage.setItem(KEY, JSON.stringify(arr)); }
+
+      function render() {
+        var rows = load();
+        var open = rows.filter(function (x) { return x.status !== 'closed'; }).length;
+        document.getElementById('sTotal').textContent = rows.length;
+        document.getElementById('sOpen').textContent = open;
+        document.getElementById('sClosed').textContent = rows.length - open;
+        var el = document.getElementById('safetyList');
+        if (!rows.length) {
+          el.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:28px;color:var(--muted);font-size:12.5px">Belum ada catatan safety lokal. Zero Accident!</div>';
+          return;
+        }
+        el.innerHTML = rows.map(function (r, idx) {
+          return '<div class="glass-soft" style="padding:14px;display:grid;gap:6px">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center">' +
+              '<span class="pill ' + (r.status === 'closed' ? 'pill-emerald' : 'pill-rose') + '">' + r.status.toUpperCase() + '</span>' +
+              '<span class="mono" style="font-size:11px;color:var(--muted)">' + r.date + '</span>' +
+            '</div>' +
+            '<div style="font-weight:800;font-size:13.5px">' + (r.area || 'Line UB') + ' · ' + (r.pic || '-') + '</div>' +
+            '<div style="font-size:12px;color:#e2e8f0">' + r.desc + '</div>' +
+            (r.action ? '<div style="font-size:11.5px;color:#6ee7b7"><b>Action:</b> ' + r.action + '</div>' : '') +
+            '<div style="display:flex;justify-content:flex-end;gap:6px;margin-top:4px">' +
+              '<button data-i="' + idx + '" class="btn btn-emerald tog-saf" style="padding:4px 9px;font-size:11px" type="button">' + (r.status === 'closed' ? 'Reopen' : 'Close') + '</button>' +
+              '<button data-i="' + idx + '" class="btn btn-rose del-saf" style="padding:4px 9px;font-size:11px" type="button">Hapus</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+        el.querySelectorAll('.tog-saf').forEach(function (b) {
+          b.onclick = function () {
+            var arr = load();
+            var i = parseInt(b.getAttribute('data-i'), 10);
+            arr[i].status = arr[i].status === 'closed' ? 'open' : 'closed';
+            save(arr); render();
+          };
+        });
+        el.querySelectorAll('.del-saf').forEach(function (b) {
+          b.onclick = function () {
+            var arr = load();
+            arr.splice(parseInt(b.getAttribute('data-i'), 10), 1);
+            save(arr); render();
+          };
+        });
+      }
+
+      document.getElementById('btnAddSafety').onclick = function () { modal.classList.add('open'); };
+      document.getElementById('closeSaf').onclick = function () { modal.classList.remove('open'); };
+      document.getElementById('cancelSaf').onclick = function () { modal.classList.remove('open'); };
+      document.getElementById('saveSaf').onclick = function () {
+        var desc = document.getElementById('sfDesc').value.trim();
+        if (!desc) { UBL.toast('Uraian wajib diisi.'); return; }
+        var arr = load();
+        arr.unshift({
+          date: UBL.wibToday(),
+          area: document.getElementById('sfArea').value.trim(),
+          pic: document.getElementById('sfPic').value.trim(),
+          desc: desc,
+          action: document.getElementById('sfAction').value.trim(),
+          status: 'open'
+        });
+        save(arr);
+        modal.classList.remove('open');
+        document.getElementById('sfDesc').value = '';
+        document.getElementById('sfAction').value = '';
+        UBL.toast('Temuan Safety tersimpan lokal.');
+        render();
+      };
+      render();
+    })();
+  </script>
+</body>
+</html>

@@ -3,268 +3,236 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>UBnetwork Lite — Underbody Apps &amp; Offline Hub</title>
-  <link rel="stylesheet" href="assets/app.css" />
+  <title>UBnetwork — Desktop Shopfloor Hub (Lite)</title>
+  <link rel="stylesheet" href="assets/macos.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <a href="index.html" class="brand">
-        <div class="brand-logo">UB</div>
+  <main class="desktop-main">
+    <!-- Hero Status Banner (Glassmorphic macOS Desktop Header) -->
+    <section class="glass" style="padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:14px">
+        <img src="assets/ubnetwork-512.png" alt="UB" style="width:52px;height:52px;border-radius:14px;box-shadow:0 10px 26px rgba(6,182,212,0.28)" onerror="this.style.display='none'" />
         <div>
-          <div class="brand-title">UBnetwork <span style="color:#6ee7b7">Lite</span></div>
-          <div class="brand-sub">Offline-First Edge Hub · IndexedDB Lokal + 1-Click Server Sync</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+            <span class="pill pill-emerald">● Mode Lokal Aktif (Tanpa Server)</span>
+            <span class="pill pill-cyan">IndexedDB + 1-Click Sync</span>
+          </div>
+          <h1 style="margin:0;font-size:21px;font-weight:900;letter-spacing:-0.02em">UBnetwork — Underbody Shopfloor Hub</h1>
+          <p style="margin:4px 0 0;font-size:12.5px;color:var(--muted)">
+            Tekan <kbd class="mono" style="background:rgba(255,255,255,0.1);padding:1px 6px;border-radius:5px">Ctrl+K</kbd> untuk Spotlight Search. Semua input tersimpan aman di PC dan siap sync 1-klik ke server.
+          </p>
         </div>
-      </a>
-      <div class="nav-right">
-        <span id="draftBadge" class="pill pill-amber">Draft Lokal: 0</span>
-        <select id="roleSelect" class="select" style="width:auto;padding:6px 10px;font-size:12px;font-weight:700" title="Pilih Role & Shift Aktif">
-          <option value="ADMIN">Role: ADMIN (All Shift)</option>
-          <option value="RED">Role: RED (Shift Merah)</option>
-          <option value="WHITE">Role: WHITE (Shift Putih)</option>
-          <option value="VIEWER">Role: VIEWER (Read-Only)</option>
-        </select>
-        <button id="btnSettings" class="btn" type="button">⚙ Pengaturan API</button>
-      </div>
-    </div>
-  </header>
-
-  <main class="container">
-    <!-- Hero Status -->
-    <section class="glass" style="padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-      <div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
-          <span class="pill pill-emerald">● Mode Lokal Aktif (Tanpa Server)</span>
-          <span class="pill pill-cyan">Edge File-Safe</span>
-        </div>
-        <h1 style="margin:0;font-size:22px;font-weight:900;letter-spacing:-0.02em">Portal Terpadu UBnetwork — Underbody</h1>
-        <p style="margin:6px 0 0;font-size:13px;color:var(--muted);max-width:680px">
-          Input harian berjalan 100% lokal di browser Edge tanpa koneksi server. Saat shift selesai, kirim data ke server hanya dengan <b>1 kali klik</b> agar langsung sinkron ke HP (`ubassy.bungtemin.net` / `ubnetwork.vercel.app`).
-        </p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <a href="productivity.html" class="btn btn-emerald">🏭 Buka Productivity</a>
-        <a href="display-kpi.html" class="btn btn-purple">📺 Display KPI</a>
-        <a href="daily.html" class="btn btn-cyan">☁ Pusat Sync &amp; Daily</a>
+        <a href="checksheet.html" class="btn btn-emerald">📋 Quick Checksheet</a>
+        <a href="display-kpi.html" class="btn btn-purple">📺 GL Board</a>
+        <a href="daily.html" class="btn btn-cyan">☁ Sync Center</a>
       </div>
     </section>
 
-    <!-- 6 KPI PILLARS (Identik dengan UBnetwork Hub) -->
-    <div class="section-label">6 Pilar KPI Shopfloor</div>
-    <section class="grid-3">
-      <a href="productivity.html" class="hub-card" style="border-color:rgba(16,185,129,0.45)">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-          <div class="icon-box g-emerald">P</div>
-          <span class="pill pill-emerald">Aktif · Offline Ready</span>
-        </div>
-        <div>
-          <div style="font-size:16px;font-weight:800">Productivity</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.45">
-            Daily Production Checksheet, No Body Start/Finish, Jam Stop, CCR Plan vs Act, dan Sync 1-Klik ke Server.
+    <!-- WINDOW 1: 6 PILAR KPI SHOPFLOOR (Finder-style macOS Window) -->
+    <section class="mac-window" id="winPillars">
+      <div class="mac-titlebar">
+        <div class="mac-title-left">
+          <div class="tl-dots">
+            <span class="tl-dot tl-red" title="Close"></span>
+            <button type="button" class="tl-dot tl-yellow" id="minPillars" title="Minimize / Expand"></button>
+            <span class="tl-dot tl-green" title="Zoom"></span>
+          </div>
+          <div>
+            <div class="mac-win-title">📁 6 Pilar KPI Shopfloor <span class="pill pill-cyan" style="font-size:10px;padding:2px 8px">Underbody</span></div>
           </div>
         </div>
-        <div style="margin-top:14px;font-size:12px;font-weight:800;color:#6ee7b7">Masuk Hub Productivity →</div>
-      </a>
-
-      <div class="hub-card disabled" title="Gunakan versi web di HP/jaringan pribadi">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-          <div class="icon-box g-rose">S</div>
-          <span class="pill">Zero Accident</span>
-        </div>
-        <div>
-          <div style="font-size:16px;font-weight:800">Safety</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:4px">Temuan Safety, Hiyari Hatto, &amp; KYT Monitoring (Tahap berikutnya).</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <input id="pillarFilter" class="input" style="width:170px;padding:4px 10px;font-size:11.5px" placeholder="Filter pilar / modul..." />
+          <div style="display:flex;gap:4px">
+            <button type="button" id="viewGridBtn" class="btn" style="padding:4px 9px;font-size:11px">⊞ Grid</button>
+            <button type="button" id="viewListBtn" class="btn" style="padding:4px 9px;font-size:11px">☰ List</button>
+          </div>
         </div>
       </div>
-
-      <div class="hub-card disabled" title="Gunakan versi web di HP/jaringan pribadi">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-          <div class="icon-box g-blue">Q</div>
-          <span class="pill">Built-in Quality</span>
-        </div>
-        <div>
-          <div style="font-size:16px;font-weight:800">Quality</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:4px">Defect Harian, Audit Kualitas &amp; Kaizen Quality (Tahap berikutnya).</div>
-        </div>
+      <div class="mac-win-body" id="bodyPillars">
+        <div id="pillarsGrid" class="grid-3"></div>
       </div>
-
-      <div class="hub-card disabled">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-          <div class="icon-box g-amber">C</div>
-          <span class="pill">Lean Budget</span>
-        </div>
-        <div>
-          <div style="font-size:16px;font-weight:800">Cost</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:4px">Pemantauan Cost, Consumable, &amp; Efisiensi Biaya.</div>
-        </div>
-      </div>
-
-      <div class="hub-card disabled">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-          <div class="icon-box g-purple">H</div>
-          <span class="pill">Manpower</span>
-        </div>
-        <div>
-          <div style="font-size:16px;font-weight:800">HR &amp; Morale</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:4px">Absensi Tim, Idea Suggestion, &amp; Pengembangan Skill.</div>
-        </div>
-      </div>
-
-      <a href="air-leakage.html" class="hub-card" style="border-color:rgba(20,184,166,0.45)">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-          <div class="icon-box g-teal">E</div>
-          <span class="pill pill-cyan">Aktif · #lub / #l10</span>
-        </div>
-        <div>
-          <div style="font-size:16px;font-weight:800">Environment (Air Leakage)</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:4px">Checksheet harian &amp; temuan #lub + Kaizen #l10 tersimpan lokal dengan 1-klik sync ke SharePoint.</div>
-        </div>
-        <div style="margin-top:14px;font-size:12px;font-weight:800;color:#67e8f9">Buka Air Leakage →</div>
-      </a>
     </section>
 
-    <!-- Tools & Shortcut -->
-    <div class="section-label">Utilitas &amp; Papan Kontrol Lokal</div>
-    <section class="grid-3">
-      <a href="daily.html" class="hub-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <span style="font-size:15px;font-weight:800">☁ Daily Activity &amp; Sync Center</span>
-          <span class="pill pill-cyan">1-Klik Sync</span>
+    <!-- WINDOW 2: UTILITAS, KAIZEN & MONITORING -->
+    <section class="mac-window" id="winTools">
+      <div class="mac-titlebar">
+        <div class="mac-title-left">
+          <div class="tl-dots">
+            <span class="tl-dot tl-red"></span>
+            <button type="button" class="tl-dot tl-yellow" id="minTools" title="Minimize / Expand"></button>
+            <span class="tl-dot tl-green"></span>
+          </div>
+          <div class="mac-win-title">⚡ Utilitas, Kaizen &amp; Papan Kontrol Lokal</div>
         </div>
-        <div style="font-size:12px;color:var(--muted)">Lihat semua laporan lokal di IndexedDB, kirim ke server sekali klik, atau Export/Import backup JSON.</div>
-      </a>
+        <span class="mac-win-sub">Offline-First Edge Ready</span>
+      </div>
+      <div class="mac-win-body" id="bodyTools">
+        <div class="grid-3">
+          <a href="daily.html" class="hub-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:14.5px;font-weight:800">☁️ Daily Activity &amp; Sync Center</span>
+              <span class="pill pill-cyan">1-Klik Sync</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted)">Lihat semua laporan lokal di IndexedDB, kirim ke server sekali klik, atau Export/Import backup JSON.</div>
+          </a>
+          <a href="display-kpi.html" class="hub-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:14.5px;font-weight:800">📺 GL Management Board</span>
+              <span class="pill pill-purple">7 Pilar</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted)">Papan KPI 7 Pilar &amp; grafik efisiensi 1–31 target 98% dari data lokal PC.</div>
+          </a>
+          <a href="checksheet.html" class="hub-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:14.5px;font-weight:800">📋 Quick Checksheet Hari Ini</span>
+              <span class="pill pill-emerald">i-Reporter A4</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted)">Langsung buka lembar Daily Production Checksheet (CBU/CKD, No Body &amp; Jam Stop).</div>
+          </a>
+          <a href="andon.html" class="hub-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:14.5px;font-weight:800">📡 Andon Monitor Intranet</span>
+              <span class="pill pill-amber">172.16.2.201</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted)">Tampilan Andon lokal pabrik (bebas Mixed Content di Edge lokal, mode Fullscreen TV).</div>
+          </a>
+          <a href="http://mfg-connectivity.toyota.co.id/web#/henkaten-dashboard" target="_blank" rel="noreferrer" class="hub-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:14.5px;font-weight:800">🗂️ Henkaten Board</span>
+              <span class="pill">Toyota Mfg ↗</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted)">Buka langsung papan Henkaten intranet Toyota Manufacturing di tab baru.</div>
+          </a>
+          <a href="hr.html" class="hub-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:14.5px;font-weight:800">🙏 Matrik Baca Doa &amp; HR</span>
+              <span class="pill pill-purple">i-Reporter</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted)">Lembar kertas digital i-Reporter Matrik Baca Doa &amp; Idea Suggestion lokal.</div>
+          </a>
+        </div>
+      </div>
+    </section>
 
-      <a href="http://mfg-connectivity.toyota.co.id/web#/henkaten-dashboard" target="_blank" rel="noreferrer" class="hub-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <span style="font-size:15px;font-weight:800">📋 Henkaten Board</span>
-          <span class="pill">Toyota Mfg</span>
+    <!-- WINDOW 3: WIDGETS RINGKASAN LOKAL -->
+    <section class="mac-window">
+      <div class="mac-titlebar">
+        <div class="mac-title-left">
+          <div class="tl-dots">
+            <span class="tl-dot tl-red"></span>
+            <button type="button" class="tl-dot tl-yellow" id="minWidgets" title="Minimize / Expand"></button>
+            <span class="tl-dot tl-green"></span>
+          </div>
+          <div class="mac-win-title">📊 Ringkasan Database Lokal (IndexedDB)</div>
         </div>
-        <div style="font-size:12px;color:var(--muted)">Buka langsung papan Henkaten intranet Toyota Manufacturing.</div>
-      </a>
-
-      <a href="andon.html" class="hub-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <span style="font-size:15px;font-weight:800">📡 Andon Monitor Intranet</span>
-          <span class="pill pill-emerald">172.16.2.201</span>
+        <span id="widLineBadge" class="pill pill-cyan">LINE: UB ASSY</span>
+      </div>
+      <div class="mac-win-body" id="bodyWidgets">
+        <div class="grid-4">
+          <div class="glass-soft" style="padding:12px 14px">
+            <div style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase">Total Laporan Checksheet</div>
+            <div id="wTotal" class="mono" style="font-size:22px;font-weight:900;margin-top:4px">0</div>
+          </div>
+          <div class="glass-soft" style="padding:12px 14px">
+            <div style="font-size:10px;color:#fcd34d;font-weight:800;text-transform:uppercase">Draft Belum Sync</div>
+            <div id="wDraft" class="mono" style="font-size:22px;font-weight:900;color:#fcd34d;margin-top:4px">0</div>
+          </div>
+          <div class="glass-soft" style="padding:12px 14px">
+            <div style="font-size:10px;color:#6ee7b7;font-weight:800;text-transform:uppercase">Sudah Tersinkron</div>
+            <div id="wSynced" class="mono" style="font-size:22px;font-weight:900;color:#6ee7b7;margin-top:4px">0</div>
+          </div>
+          <div class="glass-soft" style="padding:12px 14px">
+            <div style="font-size:10px;color:#67e8f9;font-weight:800;text-transform:uppercase">Temuan Air Leakage (#lub)</div>
+            <div id="wAir" class="mono" style="font-size:22px;font-weight:900;color:#67e8f9;margin-top:4px">0</div>
+          </div>
         </div>
-        <div style="font-size:12px;color:var(--muted)">Tampilan Andon lokal pabrik (bebas Mixed Content di Edge lokal, mode Fullscreen TV).</div>
-      </a>
-
-      <a href="checksheet.html" class="hub-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <span style="font-size:15px;font-weight:800">⚡ Quick Checksheet Hari Ini</span>
-          <span class="pill pill-emerald">Langsung Input</span>
-        </div>
-        <div style="font-size:12px;color:var(--muted)">Langsung buka lembar Daily Production Checksheet untuk tanggal hari ini.</div>
-      </a>
+      </div>
     </section>
   </main>
 
-  <!-- Modal Pengaturan API & Server -->
-  <div id="settingsModal" class="modal-backdrop">
-    <div class="modal-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <h3 style="margin:0;font-size:16px;font-weight:800">⚙ Pengaturan Endpoint &amp; Default Line</h3>
-        <button id="closeSettings" class="btn" type="button" style="padding:4px 9px">✕</button>
-      </div>
-      <div style="display:grid;gap:10px">
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">Nama Line &amp; Takt Time (menit)</label>
-          <div class="grid-2">
-            <input id="cfgLine" class="input" placeholder="UB ASSY" />
-            <input id="cfgTakt" class="input mono" type="number" step="0.1" placeholder="2.4" />
-          </div>
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">Target CCR Default (RED / WHITE)</label>
-          <div class="grid-2">
-            <input id="cfgCcrRed" class="input mono" type="number" placeholder="220" />
-            <input id="cfgCcrWhite" class="input mono" type="number" placeholder="220" />
-          </div>
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">URL API Server (untuk 1-Klik Sync)</label>
-          <input id="cfgApiUrl" class="input mono" placeholder="https://bungtemin.net/ub/api" />
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">UB API Key (opsional jika diperlukan server)</label>
-          <input id="cfgApiKey" class="input mono" type="password" placeholder="Kosongkan jika tidak perlu" />
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">URL SharePoint Sync (NUDB)</label>
-          <input id="cfgSpUrl" class="input mono" placeholder="https://nudb.bungtemin.net/functions/ub_sp_sync" />
-        </div>
-        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#cbd5e1">
-          <input id="cfgEnableSp" type="checkbox" /> Ikut kirim salinan ke SharePoint List saat 1-Klik Sync
-        </label>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">
-          <button id="cancelSettings" class="btn" type="button">Batal</button>
-          <button id="saveSettingsBtn" class="btn btn-emerald" type="button">Simpan Pengaturan</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script src="assets/db.js"></script>
+  <script src="assets/macos.js"></script>
   <script>
     (function () {
-      var roleSel = document.getElementById('roleSelect');
-      var draftBadge = document.getElementById('draftBadge');
-      var modal = document.getElementById('settingsModal');
+      var PILLARS = [
+        { code: 'P', title: 'Productivity', badge: 'Aktif · Offline Ready', pill: 'pill-emerald', grad: 'g-emerald', href: 'productivity.html', color: '#6ee7b7', desc: 'Daily Production Checksheet (i-Reporter A4), No Body Start/Finish, Jam Stop, CCR & Monitoring 1–31.' },
+        { code: 'S', title: 'Safety', badge: 'Zero Accident · Lokal', pill: 'pill-rose', grad: 'g-rose', href: 'safety.html', color: '#fda4af', desc: 'Temuan Safety, Hiyari Hatto, KYT & BIRA Monitoring tersimpan lokal di IndexedDB.' },
+        { code: 'Q', title: 'Quality', badge: 'Built-in Quality', pill: 'pill-blue', grad: 'g-blue', href: 'quality.html', color: '#93c5fd', desc: 'Defect Harian (In/Out), Audit Kualitas & Kaizen Quality lokal.' },
+        { code: 'C', title: 'Cost', badge: 'Lean Budget', pill: 'pill-amber', grad: 'g-amber', href: 'cost.html', color: '#fcd34d', desc: 'Pemantauan Cost harian, Consumable, & Temuan Efisiensi Biaya.' },
+        { code: 'H', title: 'HR & Morale', badge: 'Manpower & Doa', pill: 'pill-purple', grad: 'g-purple', href: 'hr.html', color: '#d8b4fe', desc: 'Matrik Baca Doa (i-Reporter Canvas), Idea Suggestion, & Pengembangan Skill.' },
+        { code: 'E', title: 'Environment', badge: 'Aktif · #lub / #l10', pill: 'pill-cyan', grad: 'g-teal', href: 'air-leakage.html', color: '#67e8f9', desc: 'Checksheet harian & temuan Air Leakage #lub + Kaizen #l10 dengan 1-klik sync SharePoint.' }
+      ];
 
-      function refreshHeader() {
+      var viewMode = 'grid';
+      var gridEl = document.getElementById('pillarsGrid');
+      var filterEl = document.getElementById('pillarFilter');
+
+      function renderPillars() {
+        var q = (filterEl.value || '').trim().toLowerCase();
+        var shown = PILLARS.filter(function (p) {
+          return !q || p.title.toLowerCase().indexOf(q) >= 0 || p.desc.toLowerCase().indexOf(q) >= 0 || p.code.toLowerCase() === q;
+        });
+        gridEl.className = viewMode === 'grid' ? 'grid-3' : '';
+        if (viewMode === 'list') gridEl.style.display = 'grid', gridEl.style.gap = '10px';
+        else gridEl.style.display = '', gridEl.style.gap = '';
+
+        gridEl.innerHTML = shown.map(function (p) {
+          if (viewMode === 'list') {
+            return '<a href="' + p.href + '" class="hub-card list-row">' +
+              '<div class="icon-box ' + p.grad + '">' + p.code + '</div>' +
+              '<div style="flex:1;min-width:0">' +
+                '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:15px;font-weight:800">' + p.title + '</span><span class="pill ' + p.pill + '">' + p.badge + '</span></div>' +
+                '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + p.desc + '</div>' +
+              '</div>' +
+              '<span style="font-size:12px;font-weight:800;color:' + p.color + ';white-space:nowrap">Buka →</span>' +
+            '</a>';
+          }
+          return '<a href="' + p.href + '" class="hub-card">' +
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">' +
+              '<div class="icon-box ' + p.grad + '">' + p.code + '</div>' +
+              '<span class="pill ' + p.pill + '">' + p.badge + '</span>' +
+            '</div>' +
+            '<div>' +
+              '<div style="font-size:16px;font-weight:800">' + p.title + '</div>' +
+              '<div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.45">' + p.desc + '</div>' +
+            '</div>' +
+            '<div style="margin-top:12px;font-size:12px;font-weight:800;color:' + p.color + '">Buka Modul ' + p.title + ' →</div>' +
+          '</a>';
+        }).join('');
+      }
+
+      document.getElementById('viewGridBtn').onclick = function () { viewMode = 'grid'; renderPillars(); };
+      document.getElementById('viewListBtn').onclick = function () { viewMode = 'list'; renderPillars(); };
+      filterEl.addEventListener('input', renderPillars);
+
+      document.getElementById('minPillars').onclick = function () { document.getElementById('bodyPillars').classList.toggle('collapsed'); };
+      document.getElementById('minTools').onclick = function () { document.getElementById('bodyTools').classList.toggle('collapsed'); };
+      document.getElementById('minWidgets').onclick = function () { document.getElementById('bodyWidgets').classList.toggle('collapsed'); };
+
+      function refreshWidgets() {
         UBL.getSettings().then(function (cfg) {
-          roleSel.value = cfg.role || 'ADMIN';
-          document.getElementById('cfgLine').value = cfg.lineName || 'UB ASSY';
-          document.getElementById('cfgTakt').value = cfg.taktTime || 2.4;
-          document.getElementById('cfgCcrRed').value = cfg.ccrTargetRed || 220;
-          document.getElementById('cfgCcrWhite').value = cfg.ccrTargetWhite || 220;
-          document.getElementById('cfgApiUrl').value = cfg.serverApiUrl || '';
-          document.getElementById('cfgApiKey').value = cfg.apiKey || '';
-          document.getElementById('cfgSpUrl').value = cfg.sharepointSyncUrl || '';
-          document.getElementById('cfgEnableSp').checked = Boolean(cfg.enableSharepointSync);
+          document.getElementById('widLineBadge').textContent = 'LINE: ' + (cfg.lineName || 'UB ASSY');
         });
         UBL.listReports().then(function (rows) {
-          var drafts = rows.filter(function (r) { return r.syncStatus !== 'synced'; }).length;
-          draftBadge.textContent = drafts > 0 ? ('Draft Belum Sync: ' + drafts) : ('Semua Tersinkron (' + rows.length + ')');
-          draftBadge.className = 'pill ' + (drafts > 0 ? 'pill-amber' : 'pill-emerald');
+          var synced = rows.filter(function (r) { return r.syncStatus === 'synced'; }).length;
+          document.getElementById('wTotal').textContent = rows.length;
+          document.getElementById('wDraft').textContent = rows.length - synced;
+          document.getElementById('wSynced').textContent = synced;
+        });
+        UBL.listAirFindings().then(function (f) {
+          document.getElementById('wAir').textContent = f.length;
         });
       }
 
-      roleSel.addEventListener('change', function () {
-        UBL.saveSettings({ role: roleSel.value }).then(function () {
-          UBL.toast('Role aktif diubah ke ' + roleSel.value);
-        });
+      MacOS.injectChrome({
+        title: 'UBnetwork',
+        onSettingsChanged: refreshWidgets
       });
-
-      document.getElementById('btnSettings').addEventListener('click', function () {
-        UBL.getSettings().then(function (cfg) {
-          if (cfg.role !== 'ADMIN') {
-            UBL.toast('Pengaturan API hanya bisa diubah oleh role ADMIN.');
-            return;
-          }
-          modal.classList.add('open');
-        });
-      });
-      document.getElementById('closeSettings').onclick = function () { modal.classList.remove('open'); };
-      document.getElementById('cancelSettings').onclick = function () { modal.classList.remove('open'); };
-      document.getElementById('saveSettingsBtn').onclick = function () {
-        UBL.saveSettings({
-          lineName: document.getElementById('cfgLine').value.trim() || 'UB ASSY',
-          taktTime: parseFloat(document.getElementById('cfgTakt').value) || 2.4,
-          ccrTargetRed: parseInt(document.getElementById('cfgCcrRed').value, 10) || 220,
-          ccrTargetWhite: parseInt(document.getElementById('cfgCcrWhite').value, 10) || 220,
-          serverApiUrl: document.getElementById('cfgApiUrl').value.trim(),
-          apiKey: document.getElementById('cfgApiKey').value.trim(),
-          sharepointSyncUrl: document.getElementById('cfgSpUrl').value.trim(),
-          enableSharepointSync: document.getElementById('cfgEnableSp').checked
-        }).then(function () {
-          modal.classList.remove('open');
-          UBL.toast('Pengaturan tersimpan di IndexedDB lokal.');
-        });
-      };
-
-      refreshHeader();
+      renderPillars();
+      refreshWidgets();
     })();
   </script>
 </body>

@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Matrik Baca Doa Asare (i-Reporter Canvas) | UBnetwork Lite</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden;
+      background: #020617; color: #f1f5f9;
+      font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+      user-select: none;
+    }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .canvas-wrap {
+      position: relative; width: 100vw; height: 100vh; overflow: hidden;
+      display: flex; justify-content: center; align-items: flex-start;
+      padding: 24px; cursor: grab; touch-action: none; background: #020617;
+    }
+    .canvas-wrap.panning { cursor: grabbing; }
+    .canvas-dots {
+      position: absolute; inset: 0; opacity: 0.16; pointer-events: none;
+      background-image: radial-gradient(#38bdf8 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    #paper {
+      width: 960px; min-height: 680px; background: #ffffff; color: #0f172a;
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.72); border-radius: 2px;
+      padding: 24px 28px; border: 2px solid #94a3b8; flex-shrink: 0;
+      transform-origin: top center; transition: transform 0.08s ease-out;
+    }
+    .canvas-wrap.panning #paper { transition: none; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    th, td { border: 1px solid #0f172a; padding: 5px 4px; text-align: center; }
+    th { background: #e2e8f0; font-weight: 800; }
+    .cell-tap { cursor: pointer; font-weight: 800; transition: background 0.12s; }
+    .cell-tap:hover { background: #e0f2fe; }
+    .cell-ok { background: #dcfce7; color: #166534; }
+    .cell-skip { background: #fee2e2; color: #991b1b; }
+
+    /* Floating HUDs */
+    .hud-top {
+      position: fixed; top: 12px; left: 14px; z-index: 40;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; padding: 7px 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    }
+    .hud-btn {
+      padding: 5px 10px; border-radius: 9px; border: 1px solid #334155;
+      background: #1e293b; color: #f8fafc; font-size: 11.5px; font-weight: 700; cursor: pointer;
+      text-decoration: none;
+    }
+    .hud-btn:hover { background: #334155; }
+    .hud-btn.emerald { background: #059669; border-color: transparent; }
+
+    .hud-zoom {
+      position: fixed; bottom: 16px; right: 16px; z-index: 40;
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; padding: 6px 10px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.55);
+    }
+
+    @page { size: A4 landscape; margin: 5mm; }
+    @media print {
+      html, body, .canvas-wrap { background: #fff !important; overflow: visible !important; height: auto !important; padding: 0 !important; }
+      .no-print, .canvas-dots, .hud-top, .hud-zoom { display: none !important; }
+      #paper { transform: none !important; box-shadow: none !important; border: 2px solid #000 !important; width: 100% !important; margin: 0 !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Top HUD -->
+  <div class="hud-top no-print">
+    <a href="index.html" class="hud-btn">← Beranda</a>
+    <span style="font-size:12px;font-weight:800;color:#67e8f9">Matrik Baca Doa Asare</span>
+    <input id="inpMonth" type="month" class="mono" style="background:#020617;border:1px solid #334155;color:#fff;border-radius:8px;padding:4px 8px;font-size:11.5px" />
+    <select id="inpShift" style="background:#020617;border:1px solid #334155;color:#fff;border-radius:8px;padding:4px 8px;font-size:11.5px;font-weight:700">
+      <option value="RED">SHIFT RED</option>
+      <option value="WHITE">SHIFT WHITE</option>
+    </select>
+    <button id="btnPrint" class="hud-btn emerald" type="button">🖨 Cetak A4</button>
+  </div>
+
+  <!-- Floating Zoom HUD -->
+  <div class="hud-zoom no-print">
+    <button id="zOut" class="hud-btn" type="button">−</button>
+    <span id="zPct" class="mono" style="font-size:11.5px;font-weight:800;min-width:44px;text-align:center">100%</span>
+    <button id="zIn" class="hud-btn" type="button">+</button>
+    <button id="zFit" class="hud-btn" type="button">Fit</button>
+    <button id="z100" class="hud-btn" type="button">100%</button>
+  </div>
+
+  <!-- i-Reporter Canvas -->
+  <div id="canvasWrap" class="canvas-wrap">
+    <div class="canvas-dots no-print"></div>
+    <div id="paper">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #0f172a;padding-bottom:8px;margin-bottom:12px">
+        <div>
+          <div style="font-size:10px;font-weight:800;letter-spacing:0.08em;color:#475569">PT TOYOTA MOTOR MANUFACTURING INDONESIA · UNDERBODY ASSY</div>
+          <h1 style="margin:2px 0 0;font-size:19px;font-weight:900">MATRIK PELAKSANAAN BACA DOA ASARE</h1>
+        </div>
+        <div style="text-align:right;font-size:11px;font-weight:700" class="mono">
+          <div>BULAN: <span id="pMonth">-</span></div>
+          <div>SHIFT: <span id="pShift">RED</span></div>
+        </div>
+      </div>
+
+      <table>
+        <thead id="mHead"></thead>
+        <tbody id="mBody"></tbody>
+      </table>
+
+      <div style="margin-top:12px;display:flex;justify-content:space-between;font-size:10.5px;color:#334155">
+        <span>Klik sel tanggal untuk menandai: <b>Kosong → ✓ (Sudah) → × (Izin/Libur)</b> · Tersimpan otomatis di lokal PC</span>
+        <span class="mono">Form UB-HR-DOA-01</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/db.js"></script>
+  <script>
+    (function () {
+      var KEY = 'ub_lite_bacadoa_v1';
+      var MEMBERS = ['GL / TL', 'Member 1', 'Member 2', 'Member 3', 'Member 4', 'Member 5', 'Member 6', 'Member 7', 'Member 8', 'Member 9', 'Member 10'];
+      var inpMonth = document.getElementById('inpMonth');
+      var inpShift = document.getElementById('inpShift');
+      inpMonth.value = UBL.wibToday().slice(0, 7);
+
+      function loadAll() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } }
+      function saveAll(d) { localStorage.setItem(KEY, JSON.stringify(d)); }
+
+      function renderMatrix() {
+        var ym = inpMonth.value;
+        var sh = inpShift.value;
+        document.getElementById('pMonth').textContent = ym;
+        document.getElementById('pShift').textContent = sh;
+        var db = loadAll();
+        var key = ym + '_' + sh;
+        var cur = db[key] || {};
+
+        var head = '<tr><th style="min-width:110px;text-align:left;padding-left:8px">NAMA ANGGOTA</th>';
+        for (var d = 1; d <= 31; d++) head += '<th style="width:24px">' + d + '</th>';
+        head += '</tr>';
+        document.getElementById('mHead').innerHTML = head;
+
+        document.getElementById('mBody').innerHTML = MEMBERS.map(function (name, rIdx) {
+          var tr = '<tr><td style="text-align:left;padding-left:8px;font-weight:700">' + name + '</td>';
+          for (var d = 1; d <= 31; d++) {
+            var ck = rIdx + '_' + d;
+            var val = cur[ck] || '';
+            var cls = val === '✓' ? 'cell-ok' : (val === '×' ? 'cell-skip' : '');
+            tr += '<td class="cell-tap ' + cls + '" data-ck="' + ck + '">' + val + '</td>';
+          }
+          return tr + '</tr>';
+        }).join('');
+
+        document.querySelectorAll('.cell-tap').forEach(function (td) {
+          td.onclick = function () {
+            var ck = td.getAttribute('data-ck');
+            var all = loadAll();
+            if (!all[key]) all[key] = {};
+            var curV = all[key][ck] || '';
+            all[key][ck] = curV === '' ? '✓' : (curV === '✓' ? '×' : '');
+            saveAll(all);
+            renderMatrix();
+          };
+        });
+      }
+
+      // Pan & Zoom i-Reporter Canvas
+      var wrap = document.getElementById('canvasWrap');
+      var paper = document.getElementById('paper');
+      var scale = 1, panX = 0, panY = 20;
+      var dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
+
+      function applyTx() {
+        paper.style.transform = 'translate(' + panX + 'px, ' + panY + 'px) scale(' + scale + ')';
+        document.getElementById('zPct').textContent = Math.round(scale * 100) + '%';
+      }
+      function fitPaper() {
+        scale = Math.min(1.05, Math.max(0.35, (window.innerWidth - 48) / 960));
+        panX = 0; panY = 24;
+        applyTx();
+      }
+
+      wrap.addEventListener('pointerdown', function (e) {
+        if (e.target.closest('.cell-tap')) return;
+        dragging = true; wrap.classList.add('panning');
+        sx = e.clientX; sy = e.clientY; ox = panX; oy = panY;
+      });
+      window.addEventListener('pointermove', function (e) {
+        if (!dragging) return;
+        panX = ox + (e.clientX - sx);
+        panY = oy + (e.clientY - sy);
+        applyTx();
+      });
+      window.addEventListener('pointerup', function () { dragging = false; wrap.classList.remove('panning'); });
+
+      wrap.addEventListener('wheel', function (e) {
+        if (e.ctrlKey) {
+          e.preventDefault();
+          scale = Math.min(2, Math.max(0.35, scale + (e.deltaY < 0 ? 0.08 : -0.08)));
+        } else {
+          panY -= e.deltaY * 0.7;
+          panX -= e.deltaX * 0.7;
+        }
+        applyTx();
+      }, { passive: false });
+
+      document.getElementById('zIn').onclick = function () { scale = Math.min(2, scale + 0.1); applyTx(); };
+      document.getElementById('zOut').onclick = function () { scale = Math.max(0.35, scale - 0.1); applyTx(); };
+      document.getElementById('zFit').onclick = fitPaper;
+      document.getElementById('z100').onclick = function () { scale = 1; panX = 0; panY = 24; applyTx(); };
+      document.getElementById('btnPrint').onclick = function () { window.print(); };
+
+      inpMonth.onchange = renderMatrix;
+      inpShift.onchange = renderMatrix;
+      renderMatrix();
+      fitPaper();
+    })();
+  </script>
+</body>
+</html>

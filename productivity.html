@@ -4,116 +4,157 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Productivity Hub | UBnetwork Lite</title>
-  <link rel="stylesheet" href="assets/app.css" />
+  <link rel="stylesheet" href="assets/macos.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <a href="index.html" class="btn">← Hub Utama</a>
-        <div>
-          <div class="brand-title">Productivity Hub</div>
-          <div class="brand-sub">Offline Checksheet &amp; Daily Activity · IndexedDB Lokal</div>
-        </div>
-      </div>
-      <div class="nav-right">
-        <span id="rolePill" class="pill pill-purple">Role: -</span>
-        <span id="syncPill" class="pill pill-amber">Draft: 0</span>
-      </div>
-    </div>
-  </header>
-
-  <main class="container">
-    <section class="glass" style="padding:20px;margin-bottom:18px">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">
-        <div>
-          <span class="pill pill-emerald" style="margin-bottom:8px">KPI Pillar · Productivity</span>
-          <h1 style="margin:0;font-size:21px;font-weight:900">Manajemen Output &amp; Efisiensi Harian</h1>
-          <p style="margin:6px 0 0;font-size:13px;color:var(--muted)">
-            Semua data produksi tersimpan aman di database lokal browser (IndexedDB). Kirim ke server cukup 1 kali saat shift selesai.
-          </p>
-        </div>
-        <div class="grid-3" style="min-width:290px">
-          <div class="glass-soft" style="padding:10px 14px">
-            <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase">Total Laporan</div>
-            <div id="statTotal" class="mono" style="font-size:20px;font-weight:900;margin-top:2px">0</div>
+  <main class="desktop-main">
+    <section class="mac-window">
+      <div class="mac-titlebar">
+        <div class="mac-title-left">
+          <div class="tl-dots">
+            <a href="index.html" class="tl-dot tl-red" title="Tutup &amp; Kembali ke Beranda"></a>
+            <span class="tl-dot tl-yellow"></span>
+            <span class="tl-dot tl-green"></span>
           </div>
-          <div class="glass-soft" style="padding:10px 14px">
-            <div style="font-size:10px;color:#fcd34d;font-weight:700;text-transform:uppercase">Belum Sync</div>
-            <div id="statDraft" class="mono" style="font-size:20px;font-weight:900;color:#fcd34d;margin-top:2px">0</div>
-          </div>
-          <div class="glass-soft" style="padding:10px 14px">
-            <div style="font-size:10px;color:#6ee7b7;font-weight:700;text-transform:uppercase">Tersinkron</div>
-            <div id="statSynced" class="mono" style="font-size:20px;font-weight:900;color:#6ee7b7;margin-top:2px">0</div>
+          <a href="index.html" class="btn" style="padding:4px 10px;font-size:11px">← Beranda</a>
+          <div class="icon-box g-emerald" style="width:30px;height:30px;border-radius:9px;font-size:13px">P</div>
+          <div>
+            <div class="mac-win-title">Productivity Hub <span class="pill pill-emerald" style="font-size:10px;padding:2px 8px">Offline Ready</span></div>
+            <div class="mac-win-sub">Manajemen Output, Checksheet A4 &amp; Efisiensi Harian</div>
           </div>
         </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a href="checksheet.html" class="btn btn-emerald">📋 Buka Checksheet</a>
+          <a href="daily.html" class="btn btn-cyan">☁ Sync Center</a>
+        </div>
       </div>
-    </section>
 
-    <div class="section-label">Modul Utama Productivity</div>
-    <section class="grid-3">
-      <a href="checksheet.html" class="hub-card" style="border-color:rgba(16,185,129,0.45)">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-          <div class="icon-box g-emerald">🏭</div>
-          <span class="pill pill-emerald">Utama · Offline Ready</span>
+      <div class="mac-win-body" style="display:grid;gap:16px">
+        <!-- Summary Stats -->
+        <div class="grid-3">
+          <div class="glass-soft" style="padding:12px 16px">
+            <div style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase">Total Laporan Lokal</div>
+            <div id="statTotal" class="mono" style="font-size:22px;font-weight:900;margin-top:3px">0</div>
+          </div>
+          <div class="glass-soft" style="padding:12px 16px">
+            <div style="font-size:10px;color:#fcd34d;font-weight:800;text-transform:uppercase">Draft Belum Sync</div>
+            <div id="statDraft" class="mono" style="font-size:22px;font-weight:900;color:#fcd34d;margin-top:3px">0</div>
+          </div>
+          <div class="glass-soft" style="padding:12px 16px">
+            <div style="font-size:10px;color:#6ee7b7;font-weight:800;text-transform:uppercase">Sudah Tersinkron</div>
+            <div id="statSynced" class="mono" style="font-size:22px;font-weight:900;color:#6ee7b7;margin-top:3px">0</div>
+          </div>
         </div>
-        <div>
-          <div style="font-size:17px;font-weight:800">Daily Production Checksheet</div>
-          <div style="font-size:12px;color:#6ee7b7;font-weight:700;margin-top:2px">Lembar Laporan Output Harian &amp; Line Stop</div>
-          <p style="font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.5">
-            Pencatatan output per jam (Plan vs Act), Delay INT/EXT, No Body Start/Finish (Auto Carry-over +1 &amp; Target CCR), Jam Stop Manual, serta tombol <b>Kirim ke Server (1x Sync)</b>.
-          </p>
-        </div>
-        <div style="margin-top:12px;font-size:12.5px;font-weight:800;color:#6ee7b7">Buka Checksheet →</div>
-      </a>
 
-      <a href="daily.html" class="hub-card" style="border-color:rgba(6,182,212,0.45)">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-          <div class="icon-box g-blue">📊</div>
-          <span class="pill pill-cyan">Daily Activity &amp; Sync</span>
-        </div>
-        <div>
-          <div style="font-size:17px;font-weight:800">Daily Activity &amp; Monitoring 1-31</div>
-          <div style="font-size:12px;color:#67e8f9;font-weight:700;margin-top:2px">Rekap Lokal, Batch Sync 1-Klik &amp; Backup JSON</div>
-          <p style="font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.5">
-            Pantau seluruh laporan produksi lokal yang tersimpan di PC, lihat status <b>Draft vs Synced</b>, kirim semua draft ke server sekaligus, dan Export/Import backup database lokal.
-          </p>
-        </div>
-        <div style="margin-top:12px;font-size:12.5px;font-weight:800;color:#67e8f9">Buka Daily Activity &amp; Sync →</div>
-      </a>
+        <!-- Productivity Apps Grid -->
+        <div class="grid-3">
+          <a href="checksheet.html" class="hub-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+              <div class="icon-box g-emerald">🏭</div>
+              <span class="pill pill-emerald">Utama · Live</span>
+            </div>
+            <div>
+              <div style="font-size:16px;font-weight:800">Daily Production Checksheet</div>
+              <div style="font-size:11.5px;color:#6ee7b7;font-weight:700;margin-top:2px">Lembar Laporan Output Harian &amp; Line Stop</div>
+              <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45">
+                Pencatatan output per jam (Plan vs Act), Delay INT/EXT, No Body Start/Finish (Carry-over +1 &amp; CCR), Jam Stop Manual, CBU/CKD, dan reproduksi lembar fisik A4.
+              </p>
+            </div>
+            <div style="margin-top:10px;font-size:12px;font-weight:800;color:#6ee7b7">Buka Checksheet →</div>
+          </a>
 
-      <a href="display-kpi.html" class="hub-card" style="border-color:rgba(168,85,247,0.45)">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
-          <div class="icon-box g-purple">📺</div>
-          <span class="pill pill-purple">GL Board · 16:9</span>
+          <a href="daily.html" class="hub-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+              <div class="icon-box g-blue">📊</div>
+              <span class="pill pill-blue">Monitoring · Live</span>
+            </div>
+            <div>
+              <div style="font-size:16px;font-weight:800">Monitoring Produksi &amp; Sync 1–31</div>
+              <div style="font-size:11.5px;color:#93c5fd;font-weight:700;margin-top:2px">Rekap Lokal, Batch 1-Klik Sync &amp; Backup JSON</div>
+              <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45">
+                Pantau seluruh laporan produksi lokal di IndexedDB, filter status Draft vs Synced, kirim semua draft sekaligus, dan Export/Import backup `.json`.
+              </p>
+            </div>
+            <div style="margin-top:10px;font-size:12px;font-weight:800;color:#93c5fd">Buka Daily &amp; Sync →</div>
+          </a>
+
+          <a href="display-kpi.html" class="hub-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+              <div class="icon-box g-purple">📺</div>
+              <span class="pill pill-purple">GL Board · 16:9</span>
+            </div>
+            <div>
+              <div style="font-size:16px;font-weight:800">GL Management Board &amp; KPI (1–31)</div>
+              <div style="font-size:11.5px;color:#d8b4fe;font-weight:700;margin-top:2px">7 Pilar KPI &amp; Grafik Efisiensi Target 98%</div>
+              <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45">
+                Tampilan papan KPI 16:9 identik dengan GL Management Board, lengkap dengan grafik efisiensi 1–31, Top Problem Chokotei, mode Fullscreen TV, dan cetak PDF.
+              </p>
+            </div>
+            <div style="margin-top:10px;font-size:12px;font-weight:800;color:#d8b4fe">Buka GL Board →</div>
+          </a>
+
+          <a href="andon.html" class="hub-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+              <div class="icon-box g-amber">📡</div>
+              <span class="pill pill-amber">Intranet TV</span>
+            </div>
+            <div>
+              <div style="font-size:16px;font-weight:800">Andon Live Monitor</div>
+              <div style="font-size:11.5px;color:#fcd34d;font-weight:700;margin-top:2px">U/B · M/B · S/B · S/H (172.16.2.201)</div>
+              <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45">
+                Monitor Andon intranet pabrik secara langsung di Edge lokal bebas Mixed Content, lengkap dengan auto-refresh 20 detik dan mode Fullscreen TV.
+              </p>
+            </div>
+            <div style="margin-top:10px;font-size:12px;font-weight:800;color:#fcd34d">Buka Andon →</div>
+          </a>
+
+          <a href="hr.html" class="hub-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+              <div class="icon-box g-teal">🙏</div>
+              <span class="pill pill-cyan">i-Reporter Canvas</span>
+            </div>
+            <div>
+              <div style="font-size:16px;font-weight:800">Matrik Baca Doa &amp; Absensi</div>
+              <div style="font-size:11.5px;color:#67e8f9;font-weight:700;margin-top:2px">Kertas Fisik Digital (Pan, Zoom &amp; Print)</div>
+              <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45">
+                Lembar matrik interaktif langsung di atas kertas i-Reporter Canvas dengan simpan lokal IndexedDB dan mode print A4 presisi.
+              </p>
+            </div>
+            <div style="margin-top:10px;font-size:12px;font-weight:800;color:#67e8f9">Buka Matrik →</div>
+          </a>
+
+          <div class="hub-card" id="openCfgCard">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+              <div class="icon-box g-purple">⚙️</div>
+              <span class="pill">Master Data</span>
+            </div>
+            <div>
+              <div style="font-size:16px;font-weight:800">Pengaturan Lini &amp; Endpoint</div>
+              <div style="font-size:11.5px;color:#cbd5e1;font-weight:700;margin-top:2px">Takt Time, Target CCR &amp; URL Sync</div>
+              <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45">
+                Atur Nama Line, Takt Time, Target CCR RED/WHITE, serta URL Server API &amp; SharePoint Sync (khusus Role ADMIN).
+              </p>
+            </div>
+            <div style="margin-top:10px;font-size:12px;font-weight:800;color:#e2e8f0">Buka Pengaturan →</div>
+          </div>
         </div>
-        <div>
-          <div style="font-size:17px;font-weight:800">Display KPI Productivity (1–31)</div>
-          <div style="font-size:12px;color:#d8b4fe;font-weight:700;margin-top:2px">Grafik Efisiensi Target 98% &amp; Matriks Harian</div>
-          <p style="font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.5">
-            Tampilan papan KPI 16:9 dari data lokal IndexedDB, lengkap dengan grafik batang efisiensi 1–31, Top Problem Chokotei, mode Fullscreen TV, dan cetak PDF.
-          </p>
-        </div>
-        <div style="margin-top:12px;font-size:12.5px;font-weight:800;color:#d8b4fe">Buka Display KPI →</div>
-      </a>
+      </div>
     </section>
   </main>
 
   <script src="assets/db.js"></script>
+  <script src="assets/macos.js"></script>
   <script>
     (function () {
-      UBL.getSettings().then(function (cfg) {
-        document.getElementById('rolePill').textContent = 'Role: ' + (cfg.role || 'ADMIN');
+      var mac = MacOS.injectChrome({ title: 'Productivity Hub' });
+      document.getElementById('openCfgCard').addEventListener('click', function () {
+        mac.openSettings();
       });
       UBL.listReports().then(function (rows) {
         var synced = rows.filter(function (r) { return r.syncStatus === 'synced'; }).length;
-        var draft = rows.length - synced;
         document.getElementById('statTotal').textContent = rows.length;
-        document.getElementById('statDraft').textContent = draft;
+        document.getElementById('statDraft').textContent = rows.length - synced;
         document.getElementById('statSynced').textContent = synced;
-        var sp = document.getElementById('syncPill');
-        sp.textContent = draft > 0 ? ('Draft Belum Sync: ' + draft) : 'Semua Tersinkron';
-        sp.className = 'pill ' + (draft > 0 ? 'pill-amber' : 'pill-emerald');
       });
     })();
   </script>

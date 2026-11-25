@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quality Hub (Built-in Quality) | UBnetwork Lite</title>
+  <link rel="stylesheet" href="assets/macos.css" />
+</head>
+<body>
+  <main class="desktop-main">
+    <section class="mac-window">
+      <div class="mac-titlebar">
+        <div class="mac-title-left">
+          <div class="tl-dots">
+            <a href="index.html" class="tl-dot tl-red" title="Kembali ke Beranda"></a>
+            <span class="tl-dot tl-yellow"></span>
+            <span class="tl-dot tl-green"></span>
+          </div>
+          <a href="index.html" class="btn" style="padding:4px 10px;font-size:11px">← Beranda</a>
+          <div class="icon-box g-blue" style="width:30px;height:30px;border-radius:9px;font-size:14px">Q</div>
+          <div>
+            <div class="mac-win-title">Quality Hub · Built-in Quality</div>
+            <div class="mac-win-sub">Catatan Defect Harian (In / Out) &amp; Audit Kualitas Lokal</div>
+          </div>
+        </div>
+        <button id="btnAddQ" class="btn btn-cyan" type="button">+ Catat Defect</button>
+      </div>
+      <div class="mac-win-body" style="display:grid;gap:14px">
+        <div class="glass-soft" style="padding:12px;overflow-x:auto">
+          <table>
+            <thead>
+              <tr><th>Tanggal</th><th>Tipe</th><th>Model / Station</th><th>Defect</th><th>Qty</th><th>Status</th><th style="text-align:right">Aksi</th></tr>
+            </thead>
+            <tbody id="qBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="qModal" class="modal-backdrop">
+    <div class="modal-card" style="display:grid;gap:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0;font-size:15px;font-weight:800">Catat Defect Quality</h3>
+        <button id="closeQ" class="btn" type="button" style="padding:4px 9px">✕</button>
+      </div>
+      <div class="grid-3">
+        <select id="qType" class="select"><option value="IN-LINE">IN-LINE</option><option value="OUT-LINE">OUT-LINE</option></select>
+        <input id="qStation" class="input" placeholder="Station / Model" />
+        <input id="qQty" class="input mono" type="number" value="1" min="1" />
+      </div>
+      <textarea id="qDefect" class="textarea" rows="2" placeholder="Nama defect (mis. Spatter, Missing Bolt, Gap)..."></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button id="cancelQ" class="btn" type="button">Batal</button>
+        <button id="saveQ" class="btn btn-cyan" type="button">Simpan Lokal</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/db.js"></script>
+  <script src="assets/macos.js"></script>
+  <script>
+    (function () {
+      MacOS.injectChrome({ title: 'Quality Hub' });
+      var KEY = 'ub_lite_quality_v1';
+      var modal = document.getElementById('qModal');
+      function load() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; } }
+      function save(arr) { localStorage.setItem(KEY, JSON.stringify(arr)); }
+
+      function render() {
+        var rows = load();
+        var tb = document.getElementById('qBody');
+        if (!rows.length) {
+          tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Belum ada catatan defect lokal. Zero Defect!</td></tr>';
+          return;
+        }
+        tb.innerHTML = rows.map(function (r, idx) {
+          return '<tr>' +
+            '<td class="mono">' + r.date + '</td>' +
+            '<td><span class="pill pill-blue">' + r.type + '</span></td>' +
+            '<td>' + (r.station || '-') + '</td>' +
+            '<td>' + r.defect + '</td>' +
+            '<td class="mono">' + r.qty + '</td>' +
+            '<td><span class="pill ' + (r.status === 'OK' ? 'pill-emerald' : 'pill-amber') + '">' + r.status + '</span></td>' +
+            '<td style="text-align:right"><button data-i="' + idx + '" class="btn btn-rose del-q" style="padding:4px 8px;font-size:11px" type="button">Hapus</button></td>' +
+          '</tr>';
+        }).join('');
+        tb.querySelectorAll('.del-q').forEach(function (b) {
+          b.onclick = function () {
+            var arr = load(); arr.splice(parseInt(b.getAttribute('data-i'), 10), 1); save(arr); render();
+          };
+        });
+      }
+      document.getElementById('btnAddQ').onclick = function () { modal.classList.add('open'); };
+      document.getElementById('closeQ').onclick = function () { modal.classList.remove('open'); };
+      document.getElementById('cancelQ').onclick = function () { modal.classList.remove('open'); };
+      document.getElementById('saveQ').onclick = function () {
+        var df = document.getElementById('qDefect').value.trim();
+        if (!df) { UBL.toast('Nama defect wajib diisi.'); return; }
+        var arr = load();
+        arr.unshift({
+          date: UBL.wibToday(),
+          type: document.getElementById('qType').value,
+          station: document.getElementById('qStation').value.trim(),
+          qty: parseInt(document.getElementById('qQty').value, 10) || 1,
+          defect: df,
+          status: 'OPEN'
+        });
+        save(arr); modal.classList.remove('open');
+        document.getElementById('qDefect').value = '';
+        UBL.toast('Catatan defect tersimpan lokal.'); render();
+      };
+      render();
+    })();
+  </script>
+</body>
+</html>

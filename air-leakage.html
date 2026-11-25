@@ -4,70 +4,78 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Environment · Air Leakage (#lub / #kaizen #l10) | UBnetwork Lite</title>
-  <link rel="stylesheet" href="assets/app.css" />
+  <link rel="stylesheet" href="assets/macos.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <a href="index.html" class="btn">← Hub Utama</a>
-        <div>
-          <div class="brand-title">Environment · Air Leakage (#lub · #kaizen #l10)</div>
-          <div class="brand-sub">Checksheet Harian &amp; Temuan Lokal IndexedDB · 1-Klik Sync SharePoint</div>
+  <main class="desktop-main">
+    <section class="mac-window">
+      <div class="mac-titlebar">
+        <div class="mac-title-left">
+          <div class="tl-dots">
+            <a href="index.html" class="tl-dot tl-red" title="Kembali ke Beranda"></a>
+            <span class="tl-dot tl-yellow"></span>
+            <span class="tl-dot tl-green"></span>
+          </div>
+          <a href="index.html" class="btn" style="padding:4px 10px;font-size:11px">← Beranda</a>
+          <div class="icon-box g-teal" style="width:30px;height:30px;border-radius:9px;font-size:14px">E</div>
+          <div>
+            <div class="mac-win-title">Environment · Air Leakage (#lub &amp; #kaizen #l10)</div>
+            <div class="mac-win-sub">Checksheet Harian &amp; Temuan Lokal IndexedDB · 1-Klik Sync SharePoint</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="btnAddFinding" class="btn btn-emerald" type="button">+ Temuan #lub</button>
+          <button id="btnSyncAllAir" class="btn btn-cyan" type="button">☁ Sync SharePoint (1 Klik)</button>
         </div>
       </div>
-      <div class="nav-right">
-        <button id="btnAddFinding" class="btn btn-emerald" type="button">+ Temuan #lub</button>
-        <button id="btnSyncAllAir" class="btn btn-cyan" type="button">☁ Sync SharePoint (1 Klik)</button>
-      </div>
-    </div>
-  </header>
 
-  <main class="container" style="display:grid;gap:14px">
-    <!-- Checksheet Harian -->
-    <section class="glass" style="padding:16px;display:grid;gap:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-        <div style="font-size:15px;font-weight:900">1. Checksheet Harian Air Leakage</div>
-        <span id="csSyncPill" class="pill pill-amber">● Draft Lokal</span>
-      </div>
-      <div class="grid-3">
-        <div>
-          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">TANGGAL</label>
-          <input id="csDate" class="input mono" type="date" />
-        </div>
-        <div>
-          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">SHIFT</label>
-          <select id="csShift" class="select">
-            <option value="red">🔴 RED</option>
-            <option value="white">⚪ WHITE</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">PEMERIKSA (PIC)</label>
-          <input id="csInspector" class="input" placeholder="Nama pemeriksa..." />
-        </div>
-      </div>
-      <div id="csRows" style="display:grid;gap:8px"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding-top:8px;border-top:1px solid var(--border)">
-        <span id="csSummary" style="font-size:12px;color:var(--muted)">Total Dicek: 6 · NG: 0</span>
-        <button id="btnSaveCs" class="btn btn-emerald" type="button">💾 Simpan Checksheet Lokal</button>
-      </div>
-    </section>
+      <div class="mac-win-body" style="display:grid;gap:16px">
+        <!-- Checksheet Harian -->
+        <section class="glass-soft" style="padding:16px;display:grid;gap:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="font-size:15px;font-weight:900">1. Checksheet Harian Air Leakage</div>
+            <span id="csSyncPill" class="pill pill-amber">● Draft Lokal</span>
+          </div>
+          <div class="grid-3">
+            <div>
+              <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">TANGGAL</label>
+              <input id="csDate" class="input mono" type="date" />
+            </div>
+            <div>
+              <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">SHIFT</label>
+              <select id="csShift" class="select">
+                <option value="red">🔴 RED</option>
+                <option value="white">⚪ WHITE</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10.5px;color:var(--muted);font-weight:700;display:block;margin-bottom:4px">PEMERIKSA (PIC)</label>
+              <input id="csInspector" class="input" placeholder="Nama pemeriksa..." />
+            </div>
+          </div>
+          <div id="csRows" style="display:grid;gap:8px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08)">
+            <span id="csSummary" style="font-size:12px;color:var(--muted)">Total Dicek: 6 · NG: 0</span>
+            <button id="btnSaveCs" class="btn btn-emerald" type="button">💾 Simpan Checksheet Lokal</button>
+          </div>
+        </section>
 
-    <!-- Temuan #lub & Kaizen #l10 -->
-    <section class="glass" style="padding:16px;display:grid;gap:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <div style="font-size:15px;font-weight:900">2. Daftar Temuan #lub &amp; Penanggulangan #kaizen #l10</div>
-        <span id="findCount" class="pill pill-cyan">0 Temuan</span>
+        <!-- Temuan #lub & Kaizen #l10 -->
+        <section class="glass-soft" style="padding:16px;display:grid;gap:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <div style="font-size:15px;font-weight:900">2. Daftar Temuan #lub &amp; Penanggulangan #kaizen #l10</div>
+            <span id="findCount" class="pill pill-cyan">0 Temuan</span>
+          </div>
+          <div id="findingsGrid" class="grid-2"></div>
+        </section>
       </div>
-      <div id="findingsGrid" class="grid-2"></div>
     </section>
   </main>
 
   <!-- Modal Tambah/Edit Temuan #lub -->
   <div id="airModal" class="modal-backdrop">
     <div class="modal-card" style="display:grid;gap:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:8px">
         <h3 id="modalTitle" style="margin:0;font-size:15px;font-weight:800">Tambah Temuan #lub</h3>
         <button id="btnCloseAir" class="btn" type="button" style="padding:4px 9px">✕</button>
       </div>
@@ -112,8 +120,10 @@
   </div>
 
   <script src="assets/db.js"></script>
+  <script src="assets/macos.js"></script>
   <script>
     (function () {
+      MacOS.injectChrome({ title: 'Environment · Air Leakage' });
       var curCheck = null;
       var editingId = null;
       var csDate = document.getElementById('csDate');
@@ -133,7 +143,7 @@
         curCheck.items.forEach(function (it, idx) {
           var div = document.createElement('div');
           div.className = 'glass-soft';
-          div.style.cssText = 'padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap';
+          div.style.cssText = 'padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(15,23,42,0.75)';
           div.innerHTML =
             '<div><div style="font-size:12.5px;font-weight:800"><span class="mono" style="color:#67e8f9">' + it.code + '</span> ' + it.point + '</div>' +
             '<div style="font-size:11px;color:var(--muted)">Area: ' + it.area + '</div></div>' +
@@ -191,7 +201,7 @@
           list.forEach(function (it) {
             var card = document.createElement('div');
             card.className = 'glass-soft';
-            card.style.cssText = 'padding:14px;display:grid;gap:8px';
+            card.style.cssText = 'padding:14px;display:grid;gap:8px;background:rgba(15,23,42,0.75)';
             card.innerHTML =
               '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap">' +
                 '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
@@ -205,7 +215,7 @@
               '<div style="font-size:13px;font-weight:800">' + (it.area || 'Area Line') + '</div>' +
               '<div style="font-size:12px;color:#cbd5e1">' + it.problem + '</div>' +
               (it.countermeasure ? '<div style="font-size:11.5px;color:#6ee7b7;background:rgba(6,78,59,0.35);padding:8px;border-radius:10px"><b>#kaizen #l10:</b> ' + it.countermeasure + '</div>' : '') +
-              '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid var(--border);font-size:11px;color:var(--muted)">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);font-size:11px;color:var(--muted)">' +
                 '<span>Pelapor: ' + (it.member || '-') + ' · PIC: ' + (it.pic || '-') + '</span>' +
                 '<div style="display:flex;gap:6px">' +
                   '<button data-id="' + it.id + '" class="btn f-edit" style="padding:4px 9px" type="button">Edit / #l10</button>' +

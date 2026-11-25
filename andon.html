@@ -3,56 +3,77 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Andon Intranet Monitor | UBnetwork Lite</title>
-  <link rel="stylesheet" href="assets/app.css" />
+  <title>Andon Live Monitor | UBnetwork Lite</title>
+  <link rel="stylesheet" href="assets/macos.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <a href="index.html" class="btn">← Hub Utama</a>
-        <div>
-          <div class="brand-title">Andon Monitor (Intranet 172.16.2.201)</div>
-          <div class="brand-sub">Auto-Refresh 20 detik · Bebas Mixed Content di Edge Lokal</div>
+  <main class="desktop-main">
+    <section class="mac-window">
+      <div class="mac-titlebar">
+        <div class="mac-title-left">
+          <div class="tl-dots">
+            <a href="index.html" class="tl-dot tl-red" title="Kembali ke Beranda"></a>
+            <span class="tl-dot tl-yellow"></span>
+            <span class="tl-dot tl-green"></span>
+          </div>
+          <a href="index.html" class="btn" style="padding:4px 10px;font-size:11px">← Beranda</a>
+          <div>
+            <div class="mac-win-title">📡 Andon Live Monitor <span id="lineBadge" class="pill pill-emerald" style="font-size:10px">U/B</span></div>
+            <div class="mac-win-sub">Intranet 172.16.2.201 · Auto-Refresh 20 detik · Bebas Mixed Content di Edge Lokal</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <button id="btnPrev" class="btn" type="button" title="Lini Sebelumnya (←)">◀</button>
+          <select id="lineSel" class="select" style="width:auto;padding:5px 10px;font-weight:700">
+            <option value="overall_ub.jpg">Underbody (U/B)</option>
+            <option value="overall_mb.jpg">Main Body (M/B)</option>
+            <option value="overall_sb.jpg">Side Body (S/B)</option>
+            <option value="overall_sh.jpg">Shell Body (S/H)</option>
+          </select>
+          <button id="btnNext" class="btn" type="button" title="Lini Berikutnya (→)">▶</button>
+          <button id="btnRefresh" class="btn btn-cyan" type="button">↻ Refresh</button>
+          <button id="btnFs" class="btn btn-emerald" type="button">⛶ Fullscreen TV</button>
         </div>
       </div>
-      <div class="nav-right">
-        <select id="lineSel" class="select" style="width:auto;padding:6px 10px;font-weight:700">
-          <option value="overall_ub.jpg">Underbody (U/B)</option>
-          <option value="overall_mb.jpg">Main Body (M/B)</option>
-          <option value="overall_sb.jpg">Side Body (S/B)</option>
-          <option value="overall_sh.jpg">Shell Body (S/H)</option>
-        </select>
-        <button id="btnRefresh" class="btn btn-cyan" type="button">↻ Refresh</button>
-        <button id="btnFs" class="btn btn-emerald" type="button">⛶ Fullscreen TV</button>
-      </div>
-    </div>
-  </header>
 
-  <main class="container">
-    <section class="glass" style="padding:14px;text-align:center">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px;color:var(--muted)">
-        <span id="andonUrl" class="mono">http://172.16.2.201/andon/overall/overall_ub.jpg</span>
-        <span id="andonClock" class="mono">-</span>
-      </div>
-      <img id="andonImg" alt="Andon Intranet" style="width:100%;max-height:78vh;object-fit:contain;border-radius:12px;background:#020617;border:1px solid var(--border)" />
-      <div id="andonErr" style="display:none;padding:24px;color:#fda4af;font-size:13px">
-        Gambar Andon (<code>172.16.2.201</code>) hanya dapat dimuat jika PC terhubung ke jaringan intranet pabrik TMMIN.
+      <div class="mac-win-body" style="text-align:center">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px;color:var(--muted);flex-wrap:wrap;gap:6px">
+          <span id="andonUrl" class="mono">http://172.16.2.201/andon/overall/overall_ub.jpg</span>
+          <span id="andonClock" class="mono">-</span>
+        </div>
+        <div id="andonStage" class="glass-soft" style="padding:10px;position:relative">
+          <img id="andonImg" alt="Andon Intranet" style="width:100%;max-height:72vh;object-fit:contain;border-radius:12px;background:#020617" />
+          <div id="andonErr" style="display:none;padding:36px 20px;color:#fda4af;font-size:13px">
+            Gambar Andon (<code>172.16.2.201</code>) hanya dapat dimuat jika PC terhubung ke jaringan intranet pabrik TMMIN.
+          </div>
+        </div>
       </div>
     </section>
   </main>
 
+  <script src="assets/db.js"></script>
+  <script src="assets/macos.js"></script>
   <script>
     (function () {
+      MacOS.injectChrome({ title: 'Andon Live Monitor' });
       var sel = document.getElementById('lineSel');
       var img = document.getElementById('andonImg');
       var err = document.getElementById('andonErr');
       var urlEl = document.getElementById('andonUrl');
       var clockEl = document.getElementById('andonClock');
+      var badge = document.getElementById('lineBadge');
+
+      var LABELS = {
+        'overall_ub.jpg': 'U/B',
+        'overall_mb.jpg': 'M/B',
+        'overall_sb.jpg': 'S/B',
+        'overall_sh.jpg': 'S/H'
+      };
 
       function refreshImg() {
         var code = sel.value;
         var base = 'http://172.16.2.201/andon/overall/' + code;
+        badge.textContent = LABELS[code] || 'ANDON';
         urlEl.textContent = base;
         err.style.display = 'none';
         img.style.display = 'block';
@@ -60,16 +81,28 @@
         clockEl.textContent = 'Refresh: ' + new Date().toLocaleTimeString('id-ID');
       }
 
-      img.onerror = function () {
-        img.style.display = 'none';
-        err.style.display = 'block';
-      };
+      function stepLine(delta) {
+        var idx = sel.selectedIndex;
+        var len = sel.options.length;
+        sel.selectedIndex = (idx + delta + len) % len;
+        refreshImg();
+      }
+
+      img.onerror = function () { img.style.display = 'none'; err.style.display = 'block'; };
       sel.onchange = refreshImg;
+      document.getElementById('btnPrev').onclick = function () { stepLine(-1); };
+      document.getElementById('btnNext').onclick = function () { stepLine(1); };
       document.getElementById('btnRefresh').onclick = refreshImg;
       document.getElementById('btnFs').onclick = function () {
         if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function () {});
         else document.exitFullscreen().catch(function () {});
       };
+
+      document.addEventListener('keydown', function (e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+        if (e.key === 'ArrowRight') stepLine(1);
+        if (e.key === 'ArrowLeft') stepLine(-1);
+      });
 
       refreshImg();
       setInterval(refreshImg, 20000);
