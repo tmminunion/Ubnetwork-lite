@@ -1359,16 +1359,14 @@
          MASTER DATA (100% IDENTIK DENGAN UBNETWORK/APP/PRODUCTIVITY/CHECKSHEET)
          ===================================================================== */
       var DEFAULT_CBU_MODELS = [
-        { code: 'zenix', name: 'ZENIX (HEV/GAS)', qty: 0, ratio: 1.0 },
-        { code: 'fortuner', name: 'FORTUNER (SUV)', qty: 0, ratio: 0.6 },
-        { code: 'innova', name: 'INNOVA (KIJANG)', qty: 0, ratio: 0.1 }
+        { code: 'zenix', name: 'INNOVA ZENIX', qty: 0, ratio: 0.551 },
+        { code: 'fortuner', name: 'FORTUNER', qty: 0, ratio: 0.401 },
+        { code: 'innova', name: 'KIJANG INNOVA', qty: 0, ratio: 0.048 }
       ];
 
       var DEFAULT_CKD_PARTS = [
-        { part_no: '57101-BZ010', part_name: 'Floor Underbody Front Sub-Assy', qty: 0 },
-        { part_no: '57102-BZ020', part_name: 'Cross Member #2 Sub-Assy', qty: 0 },
-        { part_no: '57103-BZ030', part_name: 'Rear Floor Side Member LH', qty: 0 },
-        { part_no: '57104-BZ040', part_name: 'Rear Floor Side Member RH', qty: 0 }
+        { part_no: '57403-KK010', part_name: 'Member Floor Side Inner RR RH', qty: 0 },
+        { part_no: '57404-KK010', part_name: 'Member Floor Side Inner RR LH', qty: 0 }
       ];
 
       var DEFAULT_MEMBERS_WHITE = [
@@ -2614,7 +2612,8 @@
           if (existing) {
             rep = existing;
             if (!Array.isArray(rep.cbuModels) || !rep.cbuModels.length) rep.cbuModels = clone(DEFAULT_CBU_MODELS);
-            if (!Array.isArray(rep.ckdParts) || !rep.ckdParts.length) rep.ckdParts = clone(DEFAULT_CKD_PARTS);
+            var isOldDummyCkd = Array.isArray(rep.ckdParts) && rep.ckdParts.length > 0 && rep.ckdParts.every(function (p) { return String(p.part_no || '').indexOf('5710') === 0 && Number(p.qty || 0) === 0; });
+            if (!Array.isArray(rep.ckdParts) || !rep.ckdParts.length || isOldDummyCkd) rep.ckdParts = clone(DEFAULT_CKD_PARTS);
             if (!Array.isArray(rep.members) || !rep.members.length) rep.members = clone(targetShift === 'RED' ? DEFAULT_MEMBERS_RED : DEFAULT_MEMBERS_WHITE);
             if (!rep.templateCode) rep.templateCode = rep.session === 'night' ? 'malam_normal' : defTpl;
             if (!rep.workMode) rep.workMode = 'normal';
