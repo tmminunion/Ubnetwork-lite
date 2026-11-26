@@ -1,0 +1,38 @@
+name: Auto Build & Release ZIP
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release-zip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create clean Ubnetwork-lite.zip
+        run: |
+          mkdir -p /tmp/pkg/Ubnetwork-lite
+          rsync -av --exclude='.git' --exclude='.github' --exclude='.gitignore' --exclude='*.zip' --exclude='.DS_Store' --exclude='Thumbs.db' ./ /tmp/pkg/Ubnetwork-lite/
+          cd /tmp/pkg
+          zip -r "${{ github.workspace }}/Ubnetwork-lite.zip" Ubnetwork-lite
+
+      - name: Upload ZIP to GitHub Release (latest)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="latest"
+          TITLE="UBnetwork-lite (Latest Build)"
+          NOTES="Auto-built dari commit \`${GITHUB_SHA::7}\` di branch \`main\`."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" Ubnetwork-lite.zip --clobber
+            gh release edit "$TAG" --title "$TITLE" --notes "$NOTES"
+          else
+            gh release create "$TAG" Ubnetwork-lite.zip --title "$TITLE" --notes "$NOTES" --latest
+          fi
