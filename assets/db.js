@@ -181,50 +181,138 @@
 
   function syncOneReportToServer(rep) {
     return getSettings().then(function (cfg) {
-      var totalPlan = 0, totalAct = 0, intDelay = 0, extDelay = 0;
-      (rep.slots || []).forEach(function (sl) {
-        totalPlan += Number(sl.plan || 0);
-        if (sl.act !== '' && sl.act !== null && sl.act !== undefined) {
+      var slots = Array.isArray(rep.slots) ? rep.slots : [];
+      var takt = Number(rep.taktTime || cfg.taktTime || 2.4) || 2.4;
+      var totalPlan = 0, totalPlanFilled = 0, totalAct = 0, intDelay = 0, extDelay = 0, totalDelay = 0;
+      var anyFilled = false;
+      var otSlots = [];
+
+      slots.forEach(function (sl) {
+        if (sl.isRest || sl.isBlocked) return;
+        var plan = Number(sl.plan || 0);
+        totalPlan += plan;
+        var isFilled = sl.act !== '' && sl.act !== null && sl.act !== undefined;
+        if (isFilled) {
+          anyFilled = true;
+          totalPlanFilled += plan;
           totalAct += Number(sl.act || 0);
         }
-        var d = Number(sl.delayMin || 0);
-        if (sl.category === 'EXT') extDelay += d; else intDelay += d;
+        if (sl.isOvertime) otSlots.push(sl);
+
+        var probs = Array.isArray(sl.problems) ? sl.problems : [];
+        if (probs.length > 0) {
+          probs.forEach(function (p) {
+            var d = Number(p.delay_min || p.delay_minutes || 0);
+            if (d <= 0 && Number(p.loss_units || 0) > 0) d = Number(p.loss_units) * takt;
+            totalDelay += d;
+            if (String(p.category || 'INT').toUpperCase() === 'EXT') extDelay += d;
+            else intDelay += d;
+          });
+        } else {
+          var d = Number(sl.delayMin || 0);
+          totalDelay += d;
+          if (String(sl.category || 'INT').toUpperCase() === 'EXT') extDelay += d;
+          else intDelay += d;
+        }
       });
-      var totalDiff = totalAct - totalPlan;
-      var eff = totalPlan > 0 ? Number(((totalAct / totalPlan) * 100).toFixed(1)) : 0;
+
+      var totalDiff = anyFilled ? (totalAct - totalPlanFilled) : 0;
+      var minusUnits = anyFilled ? Math.max(0, totalPlanFilled - totalAct) : 0;
+      var fallbackDelay = (totalDelay === 0 && minusUnits > 0) ? Number((minusUnits * takt).toFixed(1)) : Number(totalDelay.toFixed(1));
+      var effIntDelay = intDelay > 0 ? Number(intDelay.toFixed(1)) : (extDelay === 0 && fallbackDelay > 0 ? fallbackDelay : 0);
+      var effExtDelay = Number(extDelay.toFixed(1));
+      var effTotalDelay = Number((effIntDelay + effExtDelay).toFixed(1));
+      var intLossU = Math.round(effIntDelay / takt);
+      var extLossU = Math.round(effExtDelay / takt);
+      var totLossU = intLossU + extLossU;
+      var effInt = totalPlanFilled > 0 ? Number(Math.max(0, ((totalPlanFilled - intLossU) / totalPlanFilled) * 100).toFixed(1)) : (anyFilled ? 100 : 0);
+      var effExt = totalPlanFilled > 0 ? Number(Math.max(0, ((totalPlanFilled - extLossU) / totalPlanFilled) * 100).toFixed(1)) : (anyFilled ? 100 : 0);
+      var effTotal = totalPlanFilled > 0 ? Number(Math.max(0, ((totalPlanFilled - totLossU) / totalPlanFilled) * 100).toFixed(1)) : (anyFilled ? 100 : 0);
+      var eff = effInt;
+
+      var otPlanH = otSlots.reduce(function (a, r) { return a + (String(r.timeRange || '').indexOf('20:30') !== -1 ? 0.5 : 1); }, 0);
+      var otPlanU = otSlots.reduce(function (a, r) { return a + Number(r.plan || 0); }, 0);
+      var otActH = Number(rep.actOtHours || 0) > 0 ? Number(rep.actOtHours) : otPlanH;
+      var otActU = Number(rep.actOtUnits || 0) > 0 ? Number(rep.actOtUnits) : otSlots.reduce(function (a, r) {
+        return a + (r.act !== null && r.act !== undefined && r.act !== '' ? Number(r.act) : 0);
+      }, 0);
+
+      var cbuModels = Array.isArray(rep.cbuModels) ? rep.cbuModels : [];
+      var findCbuQty = function (code) {
+        var found = cbuModels.find(function (m) { return String(m.code || '').toLowerCase() === code; });
+        return found ? Number(found.qty || 0) : 0;
+      };
+      var ckdParts = Array.isArray(rep.ckdParts) ? rep.ckdParts : [];
+      var modelCkd = Number(rep.modelCkd || 0) > 0
+        ? Number(rep.modelCkd)
+        : ckdParts.reduce(function (a, p) { return a + Number(p.qty || 0); }, 0);
+
+      var hourlyRecords = slots.map(function (sl) {
+        return {
+          no: sl.no,
+          slot_no: sl.no,
+          timeRange: sl.timeRange,
+          time_range: sl.timeRange,
+          isBlocked: Boolean(sl.isBlocked),
+          isRest: Boolean(sl.isRest),
+          isOvertime: Boolean(sl.isOvertime),
+          plan: Number(sl.plan || 0),
+          act: (sl.act === '' || sl.act === null || sl.act === undefined) ? null : Number(sl.act),
+          delayMin: Number(sl.delayMin || 0),
+          delay_min: Number(sl.delayMin || 0),
+          delayCategory: sl.category || 'INT',
+          category: sl.category || 'INT',
+          lineStation: sl.lineStation || '',
+          line_station: sl.lineStation || '',
+          problem: sl.problem || '',
+          countermeasure: sl.countermeasure || '',
+          problems: Array.isArray(sl.problems) ? sl.problems : []
+        };
+      });
+
+      var lineVal = rep.lineName || cfg.lineName || 'UB ASSY';
+      var tplCode = rep.templateCode || (rep.session === 'night' ? 'malam_normal' : 'pagi_normal');
 
       var payload = {
+        date: rep.tanggal,
         tanggal: rep.tanggal,
         shift: rep.shift,
-        line_name: rep.lineName || cfg.lineName,
-        template_code: rep.session === 'night' ? 'malam_normal' : 'siang_normal',
-        takt_time: Number(rep.taktTime || cfg.taktTime || 2.4),
+        line: lineVal,
+        line_name: lineVal,
+        template_code: tplCode,
+        takt_time: takt,
         pic_name: rep.picName || '',
         spv_name: rep.spvName || '',
         no_body_start: rep.noBodyStart || '',
         no_body_finish: rep.noBodyFinish || '',
         jam_stop_produksi: rep.jamStopProduksi || '',
+        waktu_selesai_lini: rep.waktuSelesaiLini || '',
         ccr_plan: Number(rep.ccrPlan || 0),
         total_plan: totalPlan,
         total_act: totalAct,
         total_diff: totalDiff,
-        int_delay_min: intDelay,
-        ext_delay_min: extDelay,
-        total_delay_min: intDelay + extDelay,
-        act_ot_hours: Number(rep.actOtHours || 0),
-        act_ot_units: Number(rep.actOtUnits || 0),
-        issues: (rep.slots || []).map(function (sl) {
-          return {
-            slot_no: sl.no,
-            time_range: sl.timeRange,
-            plan: Number(sl.plan || 0),
-            act: sl.act === '' || sl.act === null ? null : Number(sl.act),
-            delay_min: Number(sl.delayMin || 0),
-            category: sl.category || 'INT',
-            problem: sl.problem || '',
-            countermeasure: sl.countermeasure || ''
-          };
-        })
+        efficiency: eff,
+        eff_int: effInt,
+        eff_ext: effExt,
+        eff_total: effTotal,
+        int_delay_min: Math.round(effIntDelay),
+        ext_delay_min: Math.round(effExtDelay),
+        total_delay_min: Math.round(effTotalDelay),
+        act_ot_hours: otActH,
+        act_ot_units: otActU,
+        overtime_hours: otActH,
+        ot_plan_hours: otPlanH,
+        ot_plan_units: otPlanU,
+        models_cbu: cbuModels,
+        model_cbu_source: rep.cbuSource || 'ratio',
+        model_innova: findCbuQty('innova'),
+        model_fortuner: findCbuQty('fortuner'),
+        model_zenix: findCbuQty('zenix'),
+        model_ckd: modelCkd,
+        ckd_parts: ckdParts,
+        members: Array.isArray(rep.members) ? rep.members : [],
+        hourly_records: hourlyRecords,
+        issues: hourlyRecords
       };
 
       var tasks = [];
@@ -239,7 +327,7 @@
             body: JSON.stringify(payload)
           }).then(function (r) {
             return r.json().catch(function () { return {}; }).then(function (j) {
-              return { target: 'mysql', ok: r.ok && j.status !== 'error', status: r.status, message: j.message || j.error || '' };
+              return { target: 'mysql', ok: r.ok && j.status === 'success', status: r.status, message: j.message || j.error || '' };
             });
           }).catch(function (e) {
             return { target: 'mysql', ok: false, status: 0, message: e.message };
@@ -253,11 +341,11 @@
           listName: 'UB_Production_Reports',
           syncKey: rep.id,
           fields: {
-            Title: rep.tanggal + ' | ' + rep.shift + ' | ' + (rep.lineName || cfg.lineName),
+            Title: rep.tanggal + ' | ' + rep.shift + ' | ' + lineVal,
             SyncKey: rep.id,
             Tanggal: rep.tanggal,
             Shift: rep.shift,
-            LineName: rep.lineName || cfg.lineName,
+            LineName: lineVal,
             TemplateCode: payload.template_code,
             TaktTime: payload.takt_time,
             TotalPlan: totalPlan,
@@ -265,9 +353,9 @@
             TotalDiff: totalDiff,
             CcrPlan: payload.ccr_plan,
             EfficiencyPct: eff,
-            IntDelayMin: intDelay,
-            ExtDelayMin: extDelay,
-            TotalDelayMin: intDelay + extDelay,
+            IntDelayMin: Math.round(effIntDelay),
+            ExtDelayMin: Math.round(effExtDelay),
+            TotalDelayMin: Math.round(effTotalDelay),
             NoBodyStart: payload.no_body_start,
             NoBodyFinish: payload.no_body_finish,
             JamStopProduksi: payload.jam_stop_produksi,
@@ -294,15 +382,16 @@
       }
 
       return Promise.all(tasks).then(function (results) {
-        var anyOk = results.some(function (x) { return x.ok; });
-        rep.syncStatus = anyOk ? 'synced' : 'failed';
-        rep.lastSyncedAt = anyOk ? new Date().toISOString() : (rep.lastSyncedAt || '');
+        var mysqlTask = results.find(function (x) { return x.target === 'mysql'; });
+        var primaryOk = mysqlTask ? mysqlTask.ok : results.some(function (x) { return x.ok; });
+        rep.syncStatus = primaryOk ? 'synced' : 'failed';
+        rep.lastSyncedAt = primaryOk ? new Date().toISOString() : (rep.lastSyncedAt || '');
         rep.lastSyncDetail = results;
         return saveReport(rep).then(function () {
           return txOp('sync_logs', 'readwrite', function (s) {
-            return s.add({ reportId: rep.id, ok: anyOk, results: results, at: new Date().toISOString() });
+            return s.add({ reportId: rep.id, ok: primaryOk, results: results, at: new Date().toISOString() });
           }).then(function () {
-            return { ok: anyOk, results: results, report: rep };
+            return { ok: primaryOk, results: results, report: rep };
           });
         });
       });

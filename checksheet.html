@@ -2172,12 +2172,17 @@
         var btn = document.getElementById('btnSyncTop');
         btn.disabled = true;
         btn.querySelector('span').textContent = 'Mengirim...';
+        if (lastEstFinish && lastEstFinish !== '-') rep.waktuSelesaiLini = lastEstFinish;
         return persistLocal(true).then(function () {
           return UBL.syncOneReportToServer(rep);
         }).then(function (out) {
           renderPaper();
-          if (out.ok) showToast('Data Terkirim ke Server (MySQL / SharePoint)!');
-          else showToast('Gagal terhubung ke server. Data tetap aman di lokal.');
+          if (out.ok) showToast('Data Terkirim ke Server (MySQL)!');
+          else {
+            var mysqlRes = (out.results || []).find(function (x) { return x.target === 'mysql'; });
+            var errMsg = mysqlRes && mysqlRes.message ? (' (' + (mysqlRes.status ? mysqlRes.status + ': ' : '') + mysqlRes.message + ')') : '';
+            showToast('Gagal kirim ke server' + errMsg + '. Data tetap aman di lokal.');
+          }
         }).finally(function () {
           btn.disabled = false;
           btn.querySelector('span').textContent = 'Kirim';
